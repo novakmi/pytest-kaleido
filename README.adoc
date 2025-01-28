@@ -1,0 +1,126 @@
+= pytest-variant
+:experimental:
+:icons: font
+:toc: left
+:source-highlighter: coderay
+
+ifdef::env-github[]
+:caution-caption: :fire:
+:important-caption: :exclamation:
+:note-caption: :information_source:
+:tip-caption: :bulb:
+:warning-caption: :warning:
+endif::[]
+
+:Author:    Michal Novák
+:email:     it.novakmi@gmail.com
+:URL:       https://github.com/novakmi/pytest-variant
+:Date:      2025-01-28
+:Revision:  0.1.0
+
+== Introduction
+
+The `pytest-variant` is plugin that abstracts the testing of different variants or versions.
+
+https://docs.pytest.org/[Pytest] is a well-known Python test framework with rich features and flexibility.
+
+== Installation
+
+=== `pip3` installation
+
+You can install `pytest-variant` plugin with `pip3`.
+
+.Install from https://pypi.org/ (TODO)
+----
+pip3 install pytest-variant
+----
+
+.Clone repository and install from the directory.
+----
+git clone https://github.com/novakmi/pytest-variant.git
+pip3 install pytest-variant/
+----
+NOTE: Or `pip3 install .` from `pytest-variant` directory.
+
+
+.Uninstall plugin.
+----
+pip3 uninstall pytest-variant
+----
+
+=== `PYTHONPATH` installation
+
+Set PYTHONPATH to  `pytest-variant/src` directory
+(e.g. `export PYTHONPATH=./src:$PYTHONPATH`).
+
+Add into your `conftest.py` line
+[source, python]
+----
+pytest_plugins: str = ("pytest_pexpect")
+----
+
+or add into `pytest.ini` lines
+
+[source,ini]
+----
+[pytest]
+addopts = -p pytest_pexpect
+----
+
+=== Verify installation
+
+[source, shell]
+----
+pytest --trace-config`
+----
+
+== Parameters
+
+`--pexpect-dry-run` - if added to command line, `pexpect` commands (`sendline`, `expect` ) are not performed
+
+== Quick start
+
+TODO
+
+== User guide
+
+TODO
+(See `src` and `tests` directory for now)
+
+== Plugin tests
+
+Run full `tox` tests
+
+[source,bash]
+----
+tox
+----
+
+Run full `tox`  `flake8`  tests
+[source,bash]
+----
+tox -e flake8
+----
+
+Run  `pytest` tests
+
+[source,bash]
+----
+pytest -o log_cli=true -o log_cli_level=DEBUG tests/
+----
+
+== Planned features
+
+* improve code documentation
+* examples
+* pipy.org package
+* support for test documentation (record `sendline` and `expect` commands)
+
+== Links
+
+pytest     https://pytest.org +
+
+
+=== Similar projects
+
+TODO
