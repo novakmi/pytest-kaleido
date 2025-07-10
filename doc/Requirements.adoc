@@ -1,0 +1,50 @@
+= Requirements for pytest-variant
+:toc:
+:sectnums:
+:experimental:
+
+// asciireqs-begin
+[requirements]
+
+// System Requirements
+*REQ-1*:: The plugin SHALL provide a mechanism to define product variants (e.g., versions, configurations) as test parameters.
+*REQ-2*:: The plugin SHALL allow specifying one or more products to be tested in a single test session.
+*REQ-3*:: The plugin SHOULD integrate with pytest's parameterization features to generate test cases for each variant.
+*REQ-4*:: The plugin SHALL provide a user-friendly way to declare variants in test code or configuration files.
+*REQ-5*:: The plugin SHOULD allow selection of specific variants or products via command-line options or pytest markers.
+*REQ-6*:: The plugin SHALL support reporting which variant(s) each test was executed against.
+*REQ-7*:: The plugin SHOULD be compatible with pytest >=7.0.
+*REQ-8*:: The plugin SHOULD provide clear documentation and usage examples.
+
+// Design Requirements
+*DES-1*:: The plugin SHALL implement a pytest fixture or hook to inject variant/product parameters into tests.
+*DES-2*:: The plugin SHALL support variant definitions via pytest configuration files (e.g., pytest.ini, pyproject.toml) and/or Python code (e.g., fixtures, decorators).
+*DES-3*:: The plugin SHOULD provide a command-line option (e.g., --variant, --product) to select specific variants/products for a test run.
+*DES-4*:: The plugin SHALL ensure that test IDs and reports include variant/product information for traceability.
+*DES-5*:: The plugin SHOULD provide a Python API for advanced users to define and query variants programmatically.
+*DES-6*:: The plugin SHOULD validate variant/product definitions and provide clear error messages for misconfiguration.
+*DES-7*:: The plugin SHALL provide a mechanism to define variants/products directly via command-line options (e.g., --variant, --product), overriding configuration or defaults if specified.
+*DES-8*:: The plugin SHALL provide a command-line option (e.g., --variant-setup, --product-setup) to specify a path to a product installation directory (for --variant-setup) or a string for custom product setup/discovery (for --product-setup), used to set up or discover available variants/products dynamically before test collection.
+
+// Implementation Requirements
+*IMP-1*:: The plugin SHALL use pytest's parametrize or metafunc hooks to generate test cases for each variant/product combination.
+*IMP-2*:: The plugin SHALL parse variant/product definitions from configuration files and/or test code at collection time.
+*IMP-3*:: The plugin SHOULD add custom markers or test attributes to expose variant/product context to tests and reporting tools.
+*IMP-4*:: The plugin SHALL be distributed as a standard pytest plugin (entry point: pytest11).
+*IMP-5*:: The plugin SHALL include automated tests for all major features and error conditions.
+*IMP-6*:: The plugin SHALL provide example usage in the documentation and/or as sample test files.
+*IMP-7*:: The plugin SHOULD maintain compatibility with future pytest versions via continuous integration.
+*IMP-8*:: The plugin SHALL parse and apply variant/product definitions provided via command-line options, taking precedence over configuration file or code-based definitions.
+*IMP-9*:: The plugin SHALL parse and apply the --variant-setup option as a path to a product installation directory, and the --product-setup option as a string for custom setup/discovery, to influence or override variant/product discovery and parameterization logic.
+*IMP-10*:: The plugin SHALL be designed so it can serve as an abstract base for specific product plugins, enabling reuse and extension of variant-oriented functionality in product-specific pytest plugins.
+// asciireqs-end
+
+.Examples of command-line usage
+----
+pytest --variant=pro,enterprise --product=router,switch
+pytest --variant=1.0,1.1,2.0,2.1,3.0 --product=myproduct
+pytest --variant-setup="/opt/products/myproduct/installs/"  # path to product installation directory
+pytest --product-setup="custom-setup-string"
+# Example: two products, each with different versions
+pytest --product=router,switch --variant=router:1.0,1.1;switch:2.0,2.1,3.0
+----
