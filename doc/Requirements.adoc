@@ -3,48 +3,219 @@
 :sectnums:
 :experimental:
 
-// asciireqs-begin
-[requirements]
+UR-PV-001::
+Product variant mechanism
++
+The plugin SHALL provide a mechanism to define product variants (e.g., versions, configurations) as test parameters.
++
+Tags: system;variant;parameterization
+Child: DR-PV-001, DR-PV-002, IR-PV-010
 
-// System Requirements
-*REQ-1*:: The plugin SHALL provide a mechanism to define product variants (e.g., versions, configurations) as test parameters.
-*REQ-2*:: The plugin SHALL allow specifying one or more products to be tested in a single test session.
-*REQ-3*:: The plugin SHOULD integrate with pytest's parameterization features to generate test cases for each variant.
-*REQ-4*:: The plugin SHALL provide a user-friendly way to declare variants in test code or configuration files.
-*REQ-5*:: The plugin SHOULD allow selection of specific variants or products via command-line options or pytest markers.
-*REQ-6*:: The plugin SHALL support reporting which variant(s) each test was executed against.
-*REQ-7*:: The plugin SHOULD be compatible with pytest >=7.0.
-*REQ-8*:: The plugin SHOULD provide clear documentation and usage examples.
+UR-PV-002::
+Multiple product support
++
+The plugin SHALL allow specifying one or more products to be tested in a single test session, inferred from the --variant option.
++
+Tags: system;product;variant
+Child: DR-PV-001, DR-PV-002, DR-PV-007, DR-PV-008, IR-PV-010
 
-// Design Requirements
-*DES-1*:: The plugin SHALL implement a pytest fixture or hook to inject variant/product parameters into tests.
-*DES-2*:: The plugin SHALL support variant definitions via pytest configuration files (e.g., pytest.ini, pyproject.toml) and/or Python code (e.g., fixtures, decorators).
-*DES-3*:: The plugin SHOULD provide a command-line option (e.g., --variant, --product) to select specific variants/products for a test run.
-*DES-4*:: The plugin SHALL ensure that test IDs and reports include variant/product information for traceability.
-*DES-5*:: The plugin SHOULD provide a Python API for advanced users to define and query variants programmatically.
-*DES-6*:: The plugin SHOULD validate variant/product definitions and provide clear error messages for misconfiguration.
-*DES-7*:: The plugin SHALL provide a mechanism to define variants/products directly via command-line options (e.g., --variant, --product), overriding configuration or defaults if specified.
-*DES-8*:: The plugin SHALL provide a command-line option (e.g., --variant-setup, --product-setup) to specify a path to a product installation directory (for --variant-setup) or a string for custom product setup/discovery (for --product-setup), used to set up or discover available variants/products dynamically before test collection.
+UR-PV-003::
+Pytest parameterization integration
++
+The plugin SHOULD integrate with pytest's parameterization features to generate test cases for each variant.
++
+Tags: system;pytest;parameterization
+Child: DR-PV-001, DR-PV-003
 
-// Implementation Requirements
-*IMP-1*:: The plugin SHALL use pytest's parametrize or metafunc hooks to generate test cases for each variant/product combination.
-*IMP-2*:: The plugin SHALL parse variant/product definitions from configuration files and/or test code at collection time.
-*IMP-3*:: The plugin SHOULD add custom markers or test attributes to expose variant/product context to tests and reporting tools.
-*IMP-4*:: The plugin SHALL be distributed as a standard pytest plugin (entry point: pytest11).
-*IMP-5*:: The plugin SHALL include automated tests for all major features and error conditions.
-*IMP-6*:: The plugin SHALL provide example usage in the documentation and/or as sample test files.
-*IMP-7*:: The plugin SHOULD maintain compatibility with future pytest versions via continuous integration.
-*IMP-8*:: The plugin SHALL parse and apply variant/product definitions provided via command-line options, taking precedence over configuration file or code-based definitions.
-*IMP-9*:: The plugin SHALL parse and apply the --variant-setup option as a path to a product installation directory, and the --product-setup option as a string for custom setup/discovery, to influence or override variant/product discovery and parameterization logic.
-*IMP-10*:: The plugin SHALL be designed so it can serve as an abstract base for specific product plugins, enabling reuse and extension of variant-oriented functionality in product-specific pytest plugins.
-// asciireqs-end
+UR-PV-004::
+User-friendly variant declaration
++
+The plugin SHALL provide a user-friendly way to declare variants in test code or configuration files.
++
+Tags: system;usability;configuration
+Child: DR-PV-002, DR-PV-004, DR-PV-005, DR-PV-006
+
+UR-PV-005::
+Variant selection via CLI
++
+The plugin SHOULD allow selection of specific variants or products via the --variant command-line option or pytest markers.
++
+Tags: system;cli;selection
+Child: DR-PV-003, DR-PV-007
+
+UR-PV-006::
+Variant reporting
++
+The plugin SHALL support reporting which variant(s) each test was executed against.
++
+Tags: system;reporting
+Child: DR-PV-004
+
+UR-PV-007::
+Pytest compatibility
++
+The plugin SHOULD be compatible with pytest >=7.0.
++
+Tags: system;compatibility
+Child: IR-PV-004, IR-PV-007
+
+UR-PV-008::
+Documentation and examples
++
+The plugin SHOULD provide clear documentation and usage examples.
++
+Tags: system;documentation
+Child: IR-PV-005, IR-PV-006
+
+DR-PV-001::
+Fixture/hook for variant injection
++
+The plugin SHALL implement a pytest fixture or hook to inject variant/product parameters into tests.
++
+Tags: design;fixture;hook
+Child: IR-PV-001, IR-PV-002
+
+DR-PV-002::
+Variant definition in config/code
++
+The plugin SHALL support variant definitions via pytest configuration files (e.g., pytest.ini, pyproject.toml) and/or Python code (e.g., fixtures, decorators).
++
+Tags: design;configuration;code
+Child: IR-PV-002
+
+DR-PV-003::
+CLI option for variant selection
++
+The plugin SHOULD provide a command-line option (e.g., --variant) to select specific variants/products for a test run.
++
+Tags: design;cli
+Child: IR-PV-008
+
+DR-PV-004::
+Test ID/reporting with variant info
++
+The plugin SHALL ensure that test IDs and reports include variant/product information for traceability.
++
+Tags: design;reporting
+Child: IR-PV-003
+
+DR-PV-005::
+Python API for advanced users
++
+The plugin SHOULD provide a Python API for advanced users to define and query variants programmatically.
++
+Tags: design;api
+Child: IR-PV-006
+
+DR-PV-006::
+Validation and error messages
++
+The plugin SHOULD validate variant/product definitions and provide clear error messages for misconfiguration.
++
+Tags: design;validation
+Child: IR-PV-006
+
+DR-PV-007::
+Direct CLI variant definition
++
+The plugin SHALL provide a mechanism to define variants/products directly via the --variant command-line option, overriding configuration or defaults if specified.
++
+Tags: design;cli;override
+Child: IR-PV-008
+
+DR-PV-008::
+Variant discovery from directory
++
+The plugin SHALL provide a command-line option (--variant-setup) to specify a path to a product installation directory, used to set up or discover available variants/products dynamically before test collection.
++
+Tags: design;discovery;directory
+Child: IR-PV-009
+
+IR-PV-001::
+Parametrize tests for variants/products
++
+The plugin SHALL use pytest's parametrize or metafunc hooks to generate test cases for each variant/product combination.
++
+Tags: impl;parametrize
+Child: None
+
+IR-PV-002::
+Parse variant definitions at collection
++
+The plugin SHALL parse variant/product definitions from configuration files and/or test code at collection time.
++
+Tags: impl;parse;collection
+Child: None
+
+IR-PV-003::
+Expose variant context to tests
++
+The plugin SHOULD add custom markers or test attributes to expose variant/product context to tests and reporting tools.
++
+Tags: impl;marker;context
+Child: None
+
+IR-PV-004::
+Pytest plugin entry point
++
+The plugin SHALL be distributed as a standard pytest plugin (entry point: pytest11).
++
+Tags: impl;distribution
+Child: None
+
+IR-PV-005::
+Automated tests for features/errors
++
+The plugin SHALL include automated tests for all major features and error conditions.
++
+Tags: impl;testing
+Child: None
+
+IR-PV-006::
+Example usage in docs/tests
++
+The plugin SHALL provide example usage in the documentation and/or as sample test files.
++
+Tags: impl;documentation
+Child: None
+
+IR-PV-007::
+CI for pytest compatibility
++
+The plugin SHOULD maintain compatibility with future pytest versions via continuous integration.
++
+Tags: impl;ci;compatibility
+Child: None
+
+IR-PV-008::
+Parse/apply CLI variant definitions
++
+The plugin SHALL parse and apply variant/product definitions provided via the --variant command-line option, taking precedence over configuration file or code-based definitions.
++
+Tags: impl;cli;parse
+Child: None
+
+IR-PV-009::
+Parse/apply --variant-setup for discovery
++
+The plugin SHALL parse and apply the --variant-setup option as a path to a product installation directory to influence or override variant/product discovery and parameterization logic.
++
+Tags: impl;discovery;directory
+Child: None
+
+IR-PV-010::
+Abstract base for product plugins
++
+The plugin SHALL be designed so it can serve as an abstract base for specific product plugins, enabling reuse and extension of variant-oriented functionality in product-specific pytest plugins.
++
+Tags: impl;abstract;reuse
+Child: None
 
 .Examples of command-line usage
 ----
-pytest --variant=pro,enterprise --product=router,switch
-pytest --variant=1.0,1.1,2.0,2.1,3.0 --product=myproduct
+pytest --variant=pro,enterprise
+pytest --variant=1.0,1.1,2.0,2.1,3.0
 pytest --variant-setup="/opt/products/myproduct/installs/"  # path to product installation directory
-pytest --product-setup="custom-setup-string"
 # Example: two products, each with different versions
-pytest --product=router,switch --variant=router:1.0,1.1;switch:2.0,2.1,3.0
+pytest --variant=router:1.0,1.1;switch:2.0,2.1,3.0
 ----

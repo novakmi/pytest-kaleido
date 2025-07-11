@@ -1,61 +1,67 @@
-def test_bar_fixture(pytester):
-    """Make sure that pytest accepts our fixture."""
+import logging
+log = logging.getLogger(__name__)
 
-    # create a temporary pytest test module
-    pytester.makepyfile("""
-        def test_sth(bar):
-            assert bar == "europython2015"
-    """)
 
-    # run pytest with the following cmd args
-    result = pytester.runpytest(
-        '--foo=europython2015',
-        '-v'
+def test_variant_parametrize_basic(pytester):
+    pytester.makepyfile(
+        """
+        def test_variant(variant):
+            assert hasattr(variant, 'variant')
+            assert variant.variant in ('foo', 'bar')
+        """
     )
-
-    # fnmatch_lines does an assertion internally
+    result = pytester.runpytest('--variant=foo,bar', '-v')
     result.stdout.fnmatch_lines([
-        '*::test_sth PASSED*',
+        "*::test_variant[foo* PASSED*",
+        '*::test_variant[bar* PASSED*',
     ])
-
-    # make sure that we get a '0' exit code for the testsuite
     assert result.ret == 0
 
 
-def test_help_message(pytester):
-    result = pytester.runpytest(
-        '--help',
+def test_variant_parametrize_with_product(pytester):
+    pytester.makepyfile(
+        """
+        def test_variant(variant):
+            assert hasattr(variant, 'variant')
+            assert hasattr(variant, 'product')
+            assert variant.product in ('router', 'switch')
+            assert variant.variant in ('1.0', '1.1', '2.0')
+        """
     )
-    # fnmatch_lines does an assertion internally
+    result = pytester.runpytest('--variant=router:1.0,1.1;switch:2.0', '-v')
     result.stdout.fnmatch_lines([
-        'variant:',
-        '*--foo=DEST_FOO*Set the value for the fixture "bar".',
+        '*::test_variant[router:1.0* PASSED*',
+        '*::test_variant[router:1.1* PASSED*',
+        '*::test_variant[switch:2.0* PASSED*',
     ])
+    assert result.ret == 0
 
 
-def test_hello_ini_setting(pytester):
-    pytester.makeini("""
-        [pytest]
-        HELLO = world
-    """)
-
-    pytester.makepyfile("""
-        import pytest
-
-        @pytest.fixture
-        def hello(request):
-            return request.config.getini('HELLO')
-
-        def test_hello_world(hello):
-            assert hello == 'world'
-    """)
-
-    result = pytester.runpytest('-v')
-
-    # fnmatch_lines does an assertion internally
+def test_variant_products_and_variants_fixtures(pytester):
+    pytester.makepyfile(
+        """
+        def test_products_and_variants(variant_products, variant_variants):
+            assert set(variant_products) == {'router', 'switch'}
+            assert set(variant_variants('router')) == {'1.0', '1.1'}
+            assert set(variant_variants('switch')) == {'2.0'}
+        """
+    )
+    result = pytester.runpytest('--variant=router:1.0,1.1;switch:2.0', '-o', 'log_cli_level=DEBUG', '-vv')
     result.stdout.fnmatch_lines([
-        '*::test_hello_world PASSED*',
+        '*::test_products_and_variants PASSED*',
     ])
+    assert result.ret == 0
 
-    # make sure that we get a '0' exit code for the testsuite
+
+def test_variant_variants_none_product(pytester):
+    pytester.makepyfile(
+        """
+        def test_variants_none(variant_variants):
+            assert set(variant_variants(None)) == {'foo', 'bar'}
+        """
+    )
+    result = pytester.runpytest('--variant=foo,bar', '-v')
+    result.stdout.fnmatch_lines([
+        '*::test_variants_none PASSED*',
+    ])
     assert result.ret == 0
