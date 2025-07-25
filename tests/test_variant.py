@@ -71,3 +71,67 @@ def test_variant_variants_none_attributes(pytester):
         '*::test_variants_none PASSED*',
     ])
     assert result.ret == 0
+
+
+def test_variant_inheritance_across_argument(pytester):
+    pytester.makepyfile(
+        """
+        def test_variant(variant):
+            # Should create a:1.0, a:1.1, b:1.0, b:1.1
+            if 'a' in variant.attributes:
+                assert variant.variant in ('1.0', '1.1')
+            if 'b' in variant.attributes:
+                assert variant.variant in ('1.0', '1.1')
+        """
+    )
+    result = pytester.runpytest('--variant=a:1.0,1.1', '--variant=b:1.0,1.1', '-v')
+    result.stdout.fnmatch_lines([
+        '*::test_variant[a:1.0* PASSED*',
+        '*::test_variant[a:1.1* PASSED*',
+        '*::test_variant[b:1.0* PASSED*',
+        '*::test_variant[b:1.1* PASSED*',
+    ])
+    assert result.ret == 0
+
+
+def test_variant_escape_characters(pytester):
+    pytester.makepyfile(
+        """
+        def test_variant(variant):
+            # router:special:1.0, router:special:1.1, router:special:1,2
+            if 'router' in variant.attributes and 'special' in variant.attributes:
+                assert variant.variant in ('1.0', '1.1', '1,2')
+            # '1:0' resets attributes, so should be ['1', '0']
+            if variant.attributes == ['1'] and variant.variant == '0':
+                assert True
+        """
+    )
+    result = pytester.runpytest(r'--variant=router:special:1.0,1.1,1\,2,1\:0', '-v')
+    result.stdout.fnmatch_lines([
+        '*::test_variant[router:special:1.0* PASSED*',
+        '*::test_variant[router:special:1.1* PASSED*',
+        '*::test_variant[router:special:1,2* PASSED*',
+        '*::test_variant[1:0* PASSED*',
+    ])
+    assert result.ret == 0
+
+
+def test_variant_mixed_attributes_and_inheritance(pytester):
+    pytester.makepyfile(
+        """
+        def test_variant(variant):
+            # router:1.0, 1.1, switch:2.0, 2.1
+            if 'router' in variant.attributes:
+                assert variant.variant in ('1.0', '1.1')
+            if 'switch' in variant.attributes:
+                assert variant.variant in ('2.0', '2.1')
+        """
+    )
+    result = pytester.runpytest('--variant=router:1.0,1.1,switch:2.0,2.1', '-v')
+    result.stdout.fnmatch_lines([
+        '*::test_variant[router:1.0* PASSED*',
+        '*::test_variant[router:1.1* PASSED*',
+        '*::test_variant[switch:2.0* PASSED*',
+        '*::test_variant[switch:2.1* PASSED*',
+    ])
+    assert result.ret == 0

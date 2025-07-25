@@ -17,6 +17,34 @@ def test_parse_variants_with_attributes():
     assert len(variants) == 3
 
 
+def test_parse_variants_inheritance():
+    variants = _parse_variants(['a:1.0,1.1', 'b:1.0,1.1'])
+    assert ['a', '1.0'] in variants
+    assert ['a', '1.1'] in variants
+    assert ['b', '1.0'] in variants
+    assert ['b', '1.1'] in variants
+    assert len(variants) == 4
+
+
+def test_parse_variants_mixed_attributes():
+    variants = _parse_variants(['router:1.0,1.1,switch:2.0,2.1'])
+    assert ['router', '1.0'] in variants
+    assert ['router', '1.1'] in variants
+    assert ['switch', '2.0'] in variants
+    assert ['switch', '2.1'] in variants
+    assert len(variants) == 4
+
+
+def test_parse_variants_escape_characters():
+    variants = _parse_variants(['router:special:1.0,1.1,1\\,2,1\\:0'])
+    assert ['router', 'special', '1.0'] in variants
+    assert ['router', 'special', '1.1'] in variants
+    assert ['router', 'special', '1,2'] in variants
+    # '1:0' resets attributes, so should be ['1', '0']
+    assert ['1', '0'] in variants
+    assert len(variants) == 4
+
+
 def test_variantpluginbase_from_lists():
     lists = [['router', '1.0'], ['switch', '2.0'], ['foo']]
     objs = VariantPluginBase.from_lists(lists)

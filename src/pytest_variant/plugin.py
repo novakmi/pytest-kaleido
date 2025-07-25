@@ -59,15 +59,24 @@ def _parse_variants(variant_args: Optional[List[str]]) -> List[List[str]]:
     Parse variants from multiple --variant arguments or ini/config.
     Each variant string can contain multiple attributes separated by colons,
     and multiple variants separated by commas.
+    Attributes are optional. If a variant is not preceded by attributes,
+    it inherits attributes from the previous variant in the same argument.
+    A new --variant argument resets the attribute context.
     Returns: List of attribute lists, where last item is the variant name.
     """
     if not variant_args:
         return []
     result = []
     for arg in variant_args:
+        prev_attrs = []
         for vstr in _split_escaped(arg, ','):
             attrs = _split_escaped(vstr, ':')
             attrs = [a for a in attrs if a]
+            if len(attrs) == 1 and prev_attrs:
+                # Only variant name, inherit previous attributes
+                attrs = prev_attrs + [attrs[0]]
+            if len(attrs) > 1:
+                prev_attrs = attrs[:-1]
             if attrs:
                 result.append(attrs)
     return result

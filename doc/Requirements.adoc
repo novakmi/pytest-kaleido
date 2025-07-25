@@ -87,7 +87,8 @@ DR-PV-003::
 CLI option for variant selection
 +
 General format for --variant:
-  --variant=<attribute1>:<attribute2>:...:<variant>[,<attribute1>:<attribute2>:...:<variant>...]
+  --variant=[<attribute1>:<attribute2>:...:]<variant>[,[<attribute1>:<attribute2>:...:]<variant>...]
+Attributes in --variant are optional. If a <variant> is not preceded by any <attribute>, it automatically inherits attributes from the previous <variant> in the same argument. A new --variant argument resets the attribute context.
 Attributes and variant are separated by colons ':'. Multiple variants in one argument are separated by commas ','.
 Both ':' and ',' can be escaped with a backslash '\' if they are part of an attribute or variant name.
 +
@@ -102,6 +103,10 @@ If the ':' character is part of the variant name or attribute, it can be escaped
   pytest --variant=prod1:region1:router\:special
 If the ',' character is part of the variant name, it can be escaped with a backslash:
   pytest --variant=router\,special
++
+Examples:
+  pytest --variant=a:1.0,1.1 --variant=b:1.0,1.1
+  # creates variants: a:1.0, a:1.1, b:1.0, b:1.1
 +
 Tags: design;cli
 Child: IR-PV-008
@@ -142,6 +147,7 @@ DR-PV-008::
 Variant discovery and setup
 +
 The plugin SHALL provide a command-line option (--variant-setup) to specify a general setup string for variant discovery and configuration. The syntax is the same as --variant (attributes and variant separated by colons ':', multiple entries separated by commas ','; both ':' and ',' can be escaped with a backslash '\').
+Attributes in --variant-setup are optional. If a <variant> is not preceded by any <attribute>, it automatically inherits attributes from the previous <variant> in the same argument.
 Unlike --variant, --variant-setup cannot be repeated; only one argument is accepted.
 Examples of setup string include a directory path, server location, or other resource identifier.
 +
