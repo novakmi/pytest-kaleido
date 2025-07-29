@@ -92,7 +92,8 @@ class VariantPluginBase:
     """
 
     def __init__(self, attributes: List[str], variant: str):
-        self.attributes = attributes  # list of attributes (excluding variant)
+        # Store attributes as a sorted set (unique, order not preserved)
+        self.attributes = sorted(set(attributes))
         self.variant = variant        # variant name (string)
 
     @property
