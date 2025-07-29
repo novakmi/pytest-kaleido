@@ -56,7 +56,7 @@ Set PYTHONPATH to  `pytest-variant/src` directory
 Add into your `conftest.py` line
 [source, python]
 ----
-pytest_plugins: str = ("pytest_pexpect")
+pytest_plugins: str = ("pytest_variant")
 ----
 
 or add into `pytest.ini` lines
@@ -64,7 +64,7 @@ or add into `pytest.ini` lines
 [source,ini]
 ----
 [pytest]
-addopts = -p pytest_pexpect
+addopts = -p pytest_variant
 ----
 
 === Verify installation
@@ -76,7 +76,7 @@ pytest --trace-config`
 
 == Parameters
 
-`--pexpect-dry-run` - if added to command line, `pexpect` commands (`sendline`, `expect` ) are not performed
+TODO
 
 == Quick start
 

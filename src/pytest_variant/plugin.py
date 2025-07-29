@@ -34,23 +34,25 @@ def pytest_addoption(parser):
 
 def _split_escaped(s, sep):
     """
-    Split a string by sep, but allow escaping sep with backslash.
+    Split a string by sep, but allow escaping sep with backslash only if it precedes sep.
+    Only split on unescaped sep. Remove escape backslashes from result.
     """
     parts = []
     buf = ''
-    escape = False
-    for c in s:
-        if escape:
-            buf += c
-            escape = False
-        elif c == '\\':
-            escape = True
-        elif c == sep:
+    i = 0
+    while i < len(s):
+        if s[i] == '\\' and i + 1 < len(s) and s[i + 1] == sep:
+            buf += sep
+            i += 2
+        elif s[i] == sep:
             parts.append(buf)
             buf = ''
+            i += 1
         else:
-            buf += c
+            buf += s[i]
+            i += 1
     parts.append(buf)
+    log.debug("_split_escaped: input='%s', sep='%s' -> parts=%s", s, sep, parts)
     return parts
 
 
@@ -89,16 +91,14 @@ class VariantPluginBase:
     Each instance represents a single variant, with attributes.
     """
 
-    def __init__(self, attributes: List[str]):
-        self.attributes = attributes  # list of attributes, last is variant name
-
-    @property
-    def variant(self):
-        return self.attributes[-1] if self.attributes else None
+    def __init__(self, attributes: List[str], variant: str):
+        self.attributes = attributes  # list of attributes (excluding variant)
+        self.variant = variant        # variant name (string)
 
     @property
     def attrs(self):
-        return self.attributes[:-1] if len(self.attributes) > 1 else []
+        # For backward compatibility
+        return self.attributes
 
     @staticmethod
     def parse_variants(variant_args: Optional[List[str]]) -> List[List[str]]:
@@ -108,27 +108,36 @@ class VariantPluginBase:
     def from_lists(cls, attr_lists: List[List[str]]):
         """
         Create a list of VariantPluginBase objects from a list of attribute lists.
+        Each list must have at least one item (the variant is the last item).
         """
-        return [cls(attributes=attrs) for attrs in attr_lists]
+        return [cls(attributes=attrs[:-1], variant=attrs[-1]) for attrs in attr_lists if attrs]
 
     @staticmethod
-    def get_products(variant_objs: list) -> list:
+    def get_attributes(variant_objs: list) -> list:
         """
-        Return a sorted list of unique first attributes (if present) from a list of VariantPluginBase objects.
+        Return a sorted list of all unique attributes from all VariantPluginBase objects.
         """
-        return sorted({obj.attrs[0] for obj in variant_objs if obj.attrs})
+        attributes = set()
+        for obj in variant_objs:
+            attributes.update(obj.attributes)
+        return sorted(attributes)
 
     @staticmethod
-    def get_variants(variant_objs: list, product=None) -> list:
+    def get_variants(variant_objs: list, attribute=None) -> list:
         """
-        Return a sorted list of variants for a given product (first attribute), or for None if product is None.
+        Return a sorted list of variants for a given attribute (any attribute), or for None if no attributes.
         """
-        if product is None:
-            return sorted(
-                [obj.variant for obj in variant_objs if not obj.attrs])
-        else:
-            return sorted([obj.variant for obj in variant_objs if
-                           obj.attrs and obj.attrs[0] == product])
+        log.debug("==> get_variants attribute=%s", attribute)
+        variants = []
+        for obj in variant_objs:
+            if attribute is None:
+                if not obj.attributes:
+                    variants.append(obj.variant)
+            else:
+                if attribute in obj.attributes:
+                    variants.append(obj.variant)
+        log.debug("<== variants=%s", variants)
+        return sorted(variants)
 
 
 def get_all_variant_objs(config):
@@ -146,9 +155,11 @@ def get_all_variant_objs(config):
 def pytest_generate_tests(metafunc):
     variant_objs = get_all_variant_objs(metafunc.config)
     if 'variant' in metafunc.fixturenames:
-        metafunc.parametrize('variant', variant_objs,
-                             ids=[":".join(obj.attributes) for obj in
-                                  variant_objs])
+        metafunc.parametrize(
+            'variant',
+            variant_objs,
+            ids=[":".join(obj.attributes + [obj.variant]) for obj in variant_objs]
+        )
 
 
 @pytest.fixture
@@ -165,17 +176,17 @@ def variant_setup(request):
 
 
 @pytest.fixture
-def variant_products(request):
+def variant_attributes(request):
     variant_objs = get_all_variant_objs(request.config)
-    return VariantPluginBase.get_products(variant_objs)
+    return VariantPluginBase.get_attributes(variant_objs)
 
 
 @pytest.fixture
 def variant_variants(request):
     variant_objs = get_all_variant_objs(request.config)
 
-    def _get(product=None):
-        return VariantPluginBase.get_variants(variant_objs, product)
+    def _get(attribute=None):
+        return VariantPluginBase.get_variants(variant_objs, attribute)
 
     return _get
 

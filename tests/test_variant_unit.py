@@ -36,13 +36,25 @@ def test_parse_variants_mixed_attributes():
 
 
 def test_parse_variants_escape_characters():
-    variants = _parse_variants(['router:special:1.0,1.1,1\\,2,1\\:0'])
+    variants = _parse_variants(['router:special:1.0,1.1,1\\,2,1\\:0,1:0'])
     assert ['router', 'special', '1.0'] in variants
     assert ['router', 'special', '1.1'] in variants
     assert ['router', 'special', '1,2'] in variants
+    assert ['router', 'special', '1:0'] in variants
     # '1:0' resets attributes, so should be ['1', '0']
     assert ['1', '0'] in variants
-    assert len(variants) == 4
+    assert len(variants) == 5
+
+
+def test_parse_variant_setup_windows_linux_dirs():
+    # s = r'win:C\:\ProgramFiles\App,linux:/opt/app,win:C\:\App,linux:/opt/app\,special'
+    s = r'win:C\:\App'
+    variants = _parse_variants([s])
+    # assert ['win', 'C:\\ProgramFiles\\App'] in variants
+    # assert ['linux', '/opt/app'] in variants
+    assert ['win', 'C:\\App'] in variants
+    # assert ['linux', '/opt/app,special'] in variants
+    # assert len(variants) == 4
 
 
 def test_variantpluginbase_from_lists():
@@ -55,19 +67,20 @@ def test_variantpluginbase_from_lists():
     assert objs[2].attrs == []
 
 
-def test_variantpluginbase_get_products():
-    lists = [['router', '1.0'], ['switch', '2.0'], ['foo']]
+def test_variantpluginbase_get_attributes():
+    lists = [['router', '1.0'], ['switch', '2.0'], ['foo'], ['router', 'special', '1.0'], ['router', 'special', '1.1']]
     objs = VariantPluginBase.from_lists(lists)
-    products = VariantPluginBase.get_products(objs)
-    assert set(products) == {'router', 'switch'}
+    attributes = VariantPluginBase.get_attributes(objs)
+    # Should collect all unique attributes (not just first)
+    assert set(attributes) == {'router', 'switch', 'special'}
 
 
 def test_variantpluginbase_get_variants():
-    lists = [['router', '1.0'], ['router', '1.1'], ['switch', '2.0'], ['foo']]
+    lists = [['router', '1.0'], ['router', '1.1'], ['router', 'switch', '2.0'], ['foo']]
     objs = VariantPluginBase.from_lists(lists)
     router_variants = VariantPluginBase.get_variants(objs, 'router')
     switch_variants = VariantPluginBase.get_variants(objs, 'switch')
     none_variants = VariantPluginBase.get_variants(objs, None)
-    assert set(router_variants) == {'1.0', '1.1'}
+    assert set(router_variants) == {'1.0', '1.1', '2.0'}
     assert set(switch_variants) == {'2.0'}
     assert set(none_variants) == {'foo'}
