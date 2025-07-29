@@ -15,12 +15,12 @@ endif::[]
 :Author:    Michal Novák
 :email:     it.novakmi@gmail.com
 :URL:       https://github.com/novakmi/pytest-variant
-:Date:      2025-01-28
+:Date:      2025-07-29
 :Revision:  0.1.0
 
 == Introduction
 
-The `pytest-variant` is plugin that abstracts the testing of different variants or versions.
+The `pytest-variant` plugin abstracts and simplifies testing across different variants or versions of your product or system.
 
 https://docs.pytest.org/[Pytest] is a well-known Python test framework with rich features and flexibility.
 
@@ -28,39 +28,41 @@ https://docs.pytest.org/[Pytest] is a well-known Python test framework with rich
 
 === `pip3` installation
 
-You can install `pytest-variant` plugin with `pip3`.
+You can install the `pytest-variant` plugin with `pip3`.
 
-.Install from https://pypi.org/ (TODO)
+.Install from https://pypi.org/ (not yet available)
 ----
-pip3 install pytest-variant
+# pip3 install pytest-variant
 ----
 
-.Clone repository and install from the directory.
+.Clone repository and install from the directory
 ----
 git clone https://github.com/novakmi/pytest-variant.git
-pip3 install pytest-variant/
+cd pytest-variant
+pip3 install .
 ----
-NOTE: Or `pip3 install .` from `pytest-variant` directory.
+NOTE: Or `pip3 install pytest-variant/` from the parent directory.
 
-
-.Uninstall plugin.
+.Uninstall plugin
 ----
 pip3 uninstall pytest-variant
 ----
 
 === `PYTHONPATH` installation
 
-Set PYTHONPATH to  `pytest-variant/src` directory
-(e.g. `export PYTHONPATH=./src:$PYTHONPATH`).
+Set PYTHONPATH to the `pytest-variant/src` directory (run from the root of the repository):
+[source, shell]
+----
+export PYTHONPATH=./src:$PYTHONPATH
+----
 
-Add into your `conftest.py` line
+Add into your `conftest.py`:
 [source, python]
 ----
-pytest_plugins: str = ("pytest_variant")
+pytest_plugins = ["pytest_variant"]
 ----
 
-or add into `pytest.ini` lines
-
+or add into `pytest.ini`:
 [source,ini]
 ----
 [pytest]
@@ -71,26 +73,118 @@ addopts = -p pytest_variant
 
 [source, shell]
 ----
-pytest --trace-config`
+pytest --trace-config
 ----
 
 == Parameters
 
-TODO
+See the documentation or run `pytest --help` for all available options.
 
 == Quick start
 
-TODO
+. Create a test file, e.g. `test_example.py`:
+[source,python]
+----
+def test_variant(variant):
+    print(f"Testing variant: {variant.attributes} / {variant.variant}")
+    assert variant.variant is not None
+----
+
+. Run pytest with variants:
+[source, shell]
+----
+pytest --variant=router:1.0,router:1.1,switch:2.0
+----
 
 == User guide
 
-TODO
-(See `src` and `tests` directory for now)
+=== Variant syntax
+
+Variants are specified using the `--variant` option. Each variant can have zero or more attributes and a variant name, separated by colons (`:`). Multiple variants can be specified in a single `--variant` argument, separated by commas (`,`). Both `:` and `,` can be escaped with a backslash (`\`) if they are part of an attribute or variant name.
+
+.Syntax
+----
+--variant=[<attribute1>:<attribute2>:...:]<variant>[,[<attribute1>:<attribute2>:...:]<variant>...]
+----
+
+You can repeat the `--variant` option to specify more variants. If a variant in a comma-separated list omits attributes, it inherits the attributes from the previous variant in the same argument. The first variant in a `--variant` argument may also omit attributes, in which case it is treated as having no attributes. A new `--variant` argument resets the attribute context.
+
+.Examples
+----
+--variant=router:1.0,1.1,switch:2.0
+// <1> <2> <3>
+--variant=1.0,1.1,special:2.0
+// <4> <5> <6>
+--variant=router:special:1.0,1.1,1\,2,1\:0,1:0
+// <7> <8> <9> <10> <11>
+--variant=a:1.0,1.1 --variant=b:1.0,1.1
+// <12> <13> <14> <15>
+--variant=win:C\:\\Program Files\\App,linux:/opt/app,win:C\:\\App,linux:/opt/app\,special
+// <16> <17> <18> <19>
+----
+<1> router:1.0      (attributes: router, variant: 1.0)
+<2> router:1.1      (attributes: router, variant: 1.1)
+<3> switch:2.0      (attributes: switch, variant: 2.0)
+<4> 1.0             (no attributes, variant: 1.0)
+<5> 1.1             (no attributes, variant: 1.1)
+<6> special:2.0     (attributes: special, variant: 2.0)
+<7> router:special:1.0   (attributes: router, special, variant: 1.0)
+<8> router:special:1.1   (attributes: router, special, variant: 1.1)
+<9> router:special:1,2   (attributes: router, special, variant: 1,2; escaping: '1\,2' means '1,2')
+<10> router:special:1:0  (attributes: router, special, variant: 1:0; escaping: '1\:0' means '1:0')
+<11> router:special:1:0  (attributes: router, special, variant: 1:0; resets attributes to ['1'], variant: 0)
+<12> a:1.0          (attributes: a, variant: 1.0)
+<13> a:1.1          (attributes: a, variant: 1.1)
+<14> b:1.0          (attributes: b, variant: 1.0)
+<15> b:1.1          (attributes: b, variant: 1.1)
+<16> win:C:\Program Files\App (attributes: win, variant: C:\Program Files\App; escaping: 'C\:\\Program Files\\App')
+<17> linux:/opt/app (attributes: linux, variant: /opt/app)
+<18> win:C:\App     (attributes: win, variant: C:\App; escaping: 'C\:\\App')
+<19> linux:/opt/app,special (attributes: linux, variant: /opt/app,special; escaping: '/opt/app\,special')
+
+=== Variant setup syntax
+
+The `--variant-setup` option is used to provide a general setup/discovery string (e.g., directory, server location). It uses the same syntax as `--variant`, but cannot be repeated.
+
+.Example
+----
+--variant-setup=win:C\:\\Program Files\\App,linux:/opt/app
+----
+
+=== Source code examples
+
+.Basic test using the variant fixture
+[source,python]
+----
+def test_variant(variant):
+    print(f"Testing variant: {variant.attributes} / {variant.variant}")
+    assert variant.variant is not None
+----
+
+.Using variant_attributes and variant_variants fixtures
+[source,python]
+----
+def test_attributes_and_variants(variant_attributes, variant_variants):
+    print("All attributes:", variant_attributes)
+    print("Router variants:", variant_variants('router'))
+    print("Special variants:", variant_variants('special'))
+    assert 'router' in variant_attributes
+    assert set(variant_variants('router')) == {'1.0', '1.1'}
+----
+
+.Using variant-setup in a test
+[source,python]
+----
+def test_variant_setup(variant_setup):
+    print(f"Variant setup string: {variant_setup}")
+    assert variant_setup is not None
+----
+
+.See the `tests/` directory for more usage examples, including advanced parametrization and edge cases.
 
 == Plugin tests
 
 Run full `tox` tests
-
 [source,bash]
 ----
 tox
@@ -103,7 +197,6 @@ tox -e flake8
 ----
 
 Run  `pytest` tests
-
 [source,bash]
 ----
 pytest -o log_cli=true -o log_cli_level=DEBUG tests/
@@ -111,15 +204,14 @@ pytest -o log_cli=true -o log_cli_level=DEBUG tests/
 
 == Planned features
 
-* improve code documentation
-* examples
-* pipy.org package
-* support for test documentation (record `sendline` and `expect` commands)
+* Improve code documentation
+* Add more usage examples
+* Publish to pypi.org
+* Support for test documentation (record `sendline` and `expect` commands)
 
 == Links
 
-pytest     https://pytest.org +
-
+* https://pytest.org[pytest]
 
 === Similar projects
 

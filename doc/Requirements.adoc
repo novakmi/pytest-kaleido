@@ -3,6 +3,8 @@
 :sectnums:
 :experimental:
 
+== User Requirements (UR)
+
 UR-PV-001::
 Product variant mechanism
 +
@@ -14,7 +16,7 @@ Child: DR-PV-001, DR-PV-002, IR-PV-010
 UR-PV-002::
 Multiple product support
 +
-The plugin SHALL allow specifying one or more products to be tested in a single test session, inferred from the --variant option.
+The plugin SHALL allow specifying one or more products to be tested in a single test session, inferred from the `--variant` option.
 +
 Tags: system;product;variant
 Child: DR-PV-001, DR-PV-002, DR-PV-007, DR-PV-008, IR-PV-010
@@ -38,7 +40,7 @@ Child: DR-PV-002, DR-PV-004, DR-PV-005, DR-PV-006
 UR-PV-005::
 Variant selection via CLI
 +
-The plugin SHOULD allow selection of specific variants or products via the --variant command-line option or pytest markers.
+The plugin SHOULD allow selection of specific variants or products via the `--variant` command-line option or pytest markers.
 +
 Tags: system;cli;selection
 Child: DR-PV-003, DR-PV-007
@@ -67,6 +69,8 @@ The plugin SHOULD provide clear documentation and usage examples.
 Tags: system;documentation
 Child: IR-PV-005, IR-PV-006
 
+== Design Requirements (DR)
+
 DR-PV-001::
 Fixture/hook for variant injection
 +
@@ -78,7 +82,7 @@ Child: IR-PV-001, IR-PV-002
 DR-PV-002::
 Variant definition in config/code
 +
-The plugin SHALL support variant definitions via pytest configuration files (e.g., pytest.ini, pyproject.toml) and/or Python code (e.g., fixtures, decorators).
+The plugin SHALL support variant definitions via pytest configuration files (e.g., `pytest.ini`, `pyproject.toml`) and/or Python code (e.g., fixtures, decorators).
 +
 Tags: design;configuration;code
 Child: IR-PV-002
@@ -86,26 +90,26 @@ Child: IR-PV-002
 DR-PV-003::
 CLI option for variant selection
 +
-General format for --variant:
-  --variant=[<attribute1>:<attribute2>:...:]<variant>[,[<attribute1>:<attribute2>:...:]<variant>...]
-Attributes in --variant are optional. If a <variant> is not preceded by any <attribute>, it automatically inherits attributes from the previous <variant> in the same argument. A new --variant argument resets the attribute context.
-Attributes and variant are separated by colons ':'. Multiple variants in one argument are separated by commas ','.
-Both ':' and ',' can be escaped with a backslash '\' if they are part of an attribute or variant name.
+General format for `--variant`:
+  `--variant=[<attribute1>:<attribute2>:...:]<variant>[,[<attribute1>:<attribute2>:...:]<variant>...]`
+Attributes in `--variant` are optional. If a `<variant>` is not preceded by any `<attribute>`, it automatically inherits attributes from the previous `<variant>` in the same argument. The first variant in a `--variant` argument may also omit attributes, in which case it is treated as having no attributes. A new `--variant` argument resets the attribute context.
+Attributes and variant are separated by colons `:`. Multiple variants in one argument are separated by commas `,`.
+Both `:` and `,` can be escaped with a backslash `\` if they are part of an attribute or variant name.
 +
-The plugin SHOULD provide a command-line option (e.g., --variant) to select specific variants/products for a test run.
+The plugin SHOULD provide a command-line option (e.g., `--variant`) to select specific variants/products for a test run.
 This option can be repeated, e.g.:
-  pytest --variant=router --variant=switch
+  `pytest --variant=router --variant=switch`
 Multiple variants can also be specified in a single option, separated by commas:
-  pytest --variant=router,switch
-A variant string may begin with one or more attributes, separated by colons ':', e.g.:
-  pytest --variant=prod1:region1:router,prod2:region2:switch
-If the ':' character is part of the variant name or attribute, it can be escaped with a backslash:
-  pytest --variant=prod1:region1:router\:special
-If the ',' character is part of the variant name, it can be escaped with a backslash:
-  pytest --variant=router\,special
+  `pytest --variant=router,switch`
+A variant string may begin with one or more attributes, separated by colons `:`, e.g.:
+  `pytest --variant=prod1:region1:router,prod2:region2:switch`
+If the `:` character is part of the variant name or attribute, it can be escaped with a backslash:
+  `pytest --variant=prod1:region1:router\:special`
+If the `,` character is part of the variant name, it can be escaped with a backslash:
+  `pytest --variant=router\,special`
 +
 Examples:
-  pytest --variant=a:1.0,1.1 --variant=b:1.0,1.1
+  `pytest --variant=a:1.0,1.1 --variant=b:1.0,1.1`
   # creates variants: a:1.0, a:1.1, b:1.0, b:1.1
 +
 Tags: design;cli
@@ -138,7 +142,7 @@ Child: IR-PV-006
 DR-PV-007::
 Direct CLI variant definition
 +
-The plugin SHALL provide a mechanism to define variants/products directly via the --variant command-line option, overriding configuration or defaults if specified.
+The plugin SHALL provide a mechanism to define variants/products directly via the `--variant` command-line option, overriding configuration or defaults if specified.
 +
 Tags: design;cli;override
 Child: IR-PV-008
@@ -146,13 +150,15 @@ Child: IR-PV-008
 DR-PV-008::
 Variant discovery and setup
 +
-The plugin SHALL provide a command-line option (--variant-setup) to specify a general setup string for variant discovery and configuration. The syntax is the same as --variant (attributes and variant separated by colons ':', multiple entries separated by commas ','; both ':' and ',' can be escaped with a backslash '\').
-Attributes in --variant-setup are optional. If a <variant> is not preceded by any <attribute>, it automatically inherits attributes from the previous <variant> in the same argument.
-Unlike --variant, --variant-setup cannot be repeated; only one argument is accepted.
+The plugin SHALL provide a command-line option (`--variant-setup`) to specify a general setup string for variant discovery and configuration. The syntax is the same as `--variant` (attributes and variant separated by colons `:`, multiple entries separated by commas `,`; both `:` and `,` can be escaped with a backslash `\`).
+Attributes in `--variant-setup` are optional. If a `<variant>` is not preceded by any `<attribute>`, it automatically inherits attributes from the previous `<variant>` in the same argument.
+Unlike `--variant`, `--variant-setup` cannot be repeated; only one argument is accepted.
 Examples of setup string include a directory path, server location, or other resource identifier.
 +
 Tags: design;discovery;setup
 Child: IR-PV-009
+
+== Implementation Requirements (IR)
 
 IR-PV-001::
 Parametrize tests for variants/products
@@ -181,7 +187,7 @@ Child: None
 IR-PV-004::
 Pytest plugin entry point
 +
-The plugin SHALL be distributed as a standard pytest plugin (entry point: pytest11).
+The plugin SHALL be distributed as a standard pytest plugin (entry point: `pytest11`).
 +
 Tags: impl;distribution
 Child: None
@@ -213,7 +219,7 @@ Child: None
 IR-PV-008::
 Parse/apply CLI variant definitions
 +
-The plugin SHALL parse and apply variant/product definitions provided via the --variant command-line option, taking precedence over configuration file or code-based definitions.
+The plugin SHALL parse and apply variant/product definitions provided via the `--variant` command-line option, taking precedence over configuration file or code-based definitions.
 +
 Tags: impl;cli;parse
 Child: None
@@ -221,7 +227,7 @@ Child: None
 IR-PV-009::
 Parse/apply --variant-setup for discovery
 +
-The plugin SHALL parse and apply the --variant-setup option as a path to a product installation directory to influence or override variant/product discovery and parameterization logic.
+The plugin SHALL parse and apply the `--variant-setup` option as a path to a product installation directory to influence or override variant/product discovery and parameterization logic.
 +
 Tags: impl;discovery;directory
 Child: None
