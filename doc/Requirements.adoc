@@ -96,6 +96,8 @@ Attributes in `--variant` are optional. If a `<variant>` is not preceded by any 
 Attributes and variant are separated by colons `:`. Multiple variants in one argument are separated by commas `,`.
 Both `:` and `,` can be escaped with a backslash `\` if they are part of an attribute or variant name.
 +
+A variant value (name) can be specified more than once, with the same or different attributes (even across multiple `--variant` arguments). In this case, all attributes for that variant will be merged into a single variant value with a combined set of attributes.
++
 The plugin SHOULD provide a command-line option (e.g., `--variant`) to select specific variants/products for a test run.
 This option can be repeated, e.g.:
   `pytest --variant=router --variant=switch`
@@ -110,7 +112,7 @@ If the `,` character is part of the variant name, it can be escaped with a backs
 +
 Examples:
   `pytest --variant=a:1.0,1.1 --variant=b:1.0,1.1`
-  # creates variants: a:1.0, a:1.1, b:1.0, b:1.1
+  # creates variants: 1.0 (attributes: a, b), 1.1 (attributes: a, b) (if a variant value is repeated, attributes are merged; each variant will have all attributes)
 +
 Tags: design;cli
 Child: IR-PV-008

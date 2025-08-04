@@ -147,11 +147,20 @@ class VariantPluginBase:
     def from_lists(cls, attr_lists: List[List[str]]):
         """
         Create a list of VariantPluginBase objects from a list of attribute lists.
+        If a variant name appears more than once, merge all attributes for that variant.
         Each list must have at least one item (the variant is the last item).
         """
         log.debug("==> VariantPluginBase.from_lists attr_lists=%s", attr_lists)
-        ret = [cls(attributes=attrs[:-1], variant=attrs[-1]) for attrs in
-               attr_lists if attrs]
+        variant_map = {}
+        for attrs in attr_lists:
+            if not attrs:
+                continue
+            *attributes, variant = attrs
+            if variant in variant_map:
+                variant_map[variant].update(attributes)
+            else:
+                variant_map[variant] = set(attributes)
+        ret = [cls(attributes=list(attributes), variant=variant) for variant, attributes in variant_map.items()]
         log.debug("<== VariantPluginBase.from_lists ret=%s", ret)
         return ret
 
@@ -274,6 +283,27 @@ def variant_variants(request):
         return ret
 
     log.debug("<== variant_variants ret=_get")
+    return _get
+
+
+@pytest.fixture
+def variants_with_attributes(request):
+    """
+    Fixture returning a function to get all variants that have any of the specified attributes.
+    Usage: variants_with_attributes([attr1, attr2, ...])
+    Returns a list of VariantPluginBase objects matching any attribute.
+    """
+    log.debug("==> variants_with_attributes request=%s", request)
+    variant_objs = get_all_variant_objs(request.config)
+
+    def _get(attributes: list):
+        log.debug("==> variants_with_attributes._get attributes=%s", attributes)
+        # Return variants that have ANY of the specified attributes
+        ret = [obj for obj in variant_objs if any(attr in obj.attributes for attr in attributes)]
+        log.debug("<== variants_with_attributes._get ret=%s", [(obj.attributes, obj.variant) for obj in ret])
+        return ret
+
+    log.debug("<== variants_with_attributes ret=_get")
     return _get
 
 

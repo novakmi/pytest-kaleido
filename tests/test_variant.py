@@ -81,20 +81,17 @@ def test_variant_inheritance_across_argument(pytester):
     pytester.makepyfile(
         """
         def test_variant(variant):
-            # Should create a:1.0, a:1.1, b:1.0, b:1.1
-            if 'a' in variant.attributes:
-                assert variant.variant in ('1.0', '1.1')
-            if 'b' in variant.attributes:
-                assert variant.variant in ('1.0', '1.1')
+            # Should create a:1.0, a:1.1, b:1.0, b:1.1, and merge attributes for same variant
+            if variant.variant == '1.0':
+                assert set(variant.attributes) == {'a', 'b'}
+            if variant.variant == '1.1':
+                assert set(variant.attributes) == {'a', 'b'}
         """
     )
-    result = pytester.runpytest('--variant=a:1.0,1.1', '--variant=b:1.0,1.1',
-                                '-v')
+    result = pytester.runpytest('--variant=a:1.0,1.1', '--variant=b:1.0,1.1', '-v')
     result.stdout.fnmatch_lines([
-        '*::test_variant[a:1.0* PASSED*',
-        '*::test_variant[a:1.1* PASSED*',
-        '*::test_variant[b:1.0* PASSED*',
-        '*::test_variant[b:1.1* PASSED*',
+        '*::test_variant[a:b:1.0* PASSED*',
+        '*::test_variant[a:b:1.1* PASSED*',
     ])
     assert result.ret == 0
 
@@ -166,5 +163,31 @@ def test_variant_setup_escape_characters(pytester):
         r'win:C\:\App,linux:/opt/app\,special', '-v')
     result.stdout.fnmatch_lines([
         '*::test_variant_setup PASSED*',
+    ])
+    assert result.ret == 0
+
+
+def test_variants_with_attributes_fixture(pytester):
+    pytester.makepyfile(
+        """
+        def test_variants_with_attributes(variants_with_attributes):
+            # Should return all variants with 'router' or 'special' attributes
+            objs = variants_with_attributes(['router', 'special'])
+            for obj in objs:
+                assert 'router' in obj.attributes or 'special' in obj.attributes
+            assert set(obj.variant for obj in objs) == {'1.0', '1.1', '1,2', '1:0'}
+            # Should return all variants with 'switch' attribute
+            objs2 = variants_with_attributes(['switch'])
+            for obj in objs2:
+                assert 'switch' in obj.attributes
+            assert set(obj.variant for obj in objs2) == {'2.0'}
+        """
+    )
+    result = pytester.runpytest(
+        r'--variant=router:1.0,router:1.1,switch:2.0,router:special:1.0,' +
+        r'router:special:1.1,special:1\,2,special:1\:0',
+        '-vv')
+    result.stdout.fnmatch_lines([
+        '*::test_variants_with_attributes PASSED*',
     ])
     assert result.ret == 0
