@@ -207,7 +207,6 @@ pytest -o log_cli=true -o log_cli_level=DEBUG tests/
 * Improve code documentation
 * Add more usage examples
 * Publish to pypi.org
-* Support for test documentation (record `sendline` and `expect` commands)
 
 == Links
 

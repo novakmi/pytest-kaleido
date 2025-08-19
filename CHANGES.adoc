@@ -1,4 +1,8 @@
 
+=== 2025-xx-xx  0.2.0
+
+TODO:: Add more details about the changes in this release.
+
 === 2025-07-29  0.1.0
 
 Initial release

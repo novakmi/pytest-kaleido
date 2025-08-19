@@ -75,20 +75,46 @@ def _split_escaped(s, sep):
     return parts
 
 
-def _parse_variants(variant_args: Optional[List[str]]) -> List[List[str]]:
+def _parse_variant_args_to_lists(variant_args: Optional[List[str]]) -> (
+        List)[List[str]]:
     """
-    Parse variants from multiple --variant arguments or ini/config.
-    Each variant string can contain multiple attributes separated by colons,
-    and multiple variants separated by commas.
-    Attributes are optional. If a variant is not preceded by attributes,
-    it inherits attributes from the previous variant in the same argument.
-    A new --variant argument resets the attribute context.
-    Returns: List of attribute lists, where last item is the variant name.
+    Convert variant argument strings into structured attribute lists.
+
+    Takes raw variant specification strings and converts them into a list of attribute lists,
+    where each inner list contains attributes followed by the variant name as the last element.
+
+    Args:
+        variant_args: List of variant specification strings from command-line or config.
+                     Each string uses colon (:) to separate attributes and comma (,) to
+                     separate different variants within the same argument.
+
+    Returns:
+        List of attribute lists where each inner list has format:
+        [attribute1, attribute2, ..., variant_name]
+
+    Behavior:
+        - Splits on commas (,) to separate variants within each argument string
+        - Splits on colons (:) to separate attributes from variant names
+        - Supports attribute inheritance: variants without explicit attributes
+          inherit from the previous variant in the same argument string
+        - Resets inheritance context across different variant_args elements
+        - Filters out empty segments automatically
+        - Respects escaped separators (\\: and \\,)
+
+    Examples:
+        >>> _parse_variant_args_to_lists(["prod:web:v1,mobile:v2"])
+        [['prod', 'web', 'v1'], ['mobile', 'v2']]
+
+        >>> _parse_variant_args_to_lists(["prod:v1,v2"])  # v2 inherits 'prod'
+        [['prod', 'v1'], ['prod', 'v2']]
+
+        >>> _parse_variant_args_to_lists(["prod:v1", "test:v2"])  # inheritance resets
+        [['prod', 'v1'], ['test', 'v2']]
     """
-    log.debug("==> _parse_variants variant_args=%s", variant_args)
+    log.debug("==> _parse_variant_args_to_lists variant_args=%s", variant_args)
     ret = []
     if not variant_args:
-        log.debug("<== _parse_variants ret=%s", ret)
+        log.debug("<== _parse_variant_args_to_lists ret=%s", ret)
         return ret
     for arg in variant_args:
         prev_attrs = []
@@ -101,7 +127,7 @@ def _parse_variants(variant_args: Optional[List[str]]) -> List[List[str]]:
                 prev_attrs = attrs[:-1]
             if attrs:
                 ret.append(attrs)
-    log.debug("<== _parse_variants ret=%s", ret)
+    log.debug("<== _parse_variant_args_to_lists ret=%s", ret)
     return ret
 
 
@@ -112,16 +138,16 @@ class VariantPluginBase:
     Provides helpers for parsing, deduplication, and variant/attribute access.
     """
 
-    def __init__(self, attributes: List[str], variant: str):
+    def __init__(self, variant: str, attributes: List[str] = None):
         """
         Initialize a VariantPluginBase object.
-        :param attributes: List of attribute strings (excluding the variant name).
         :param variant: The variant name (string).
+        :param attributes: List of attribute strings (excluding the variant name). Defaults to empty list if None.
         """
-        log.debug("==> VariantPluginBase.__init__ attributes=%s, variant=%s",
-                  attributes, variant)
+        log.debug("==> VariantPluginBase.__init__ variant=%s, attributes=%s",
+                  variant, attributes)
         # Store attributes as a sorted set (unique, order not preserved)
-        self.attributes = sorted(set(attributes))
+        self.attributes = sorted(set(attributes or []))
         self.variant = variant  # variant name (string)
         log.debug("<== VariantPluginBase.__init__ ret=None")
 
@@ -132,25 +158,98 @@ class VariantPluginBase:
         """
         return self.attributes
 
-    @staticmethod
-    def parse_variants(variant_args: Optional[List[str]]) -> List[List[str]]:
+    @classmethod
+    def parse_variants(cls, variant_args: Optional[List[str]]) -> (
+            List)["VariantPluginBase"]:
         """
-        Parse variant argument strings into lists of attributes + variant name.
+        Parse variant argument strings and return a list of VariantPluginBase objects.
+
+        Primary entry point for converting command-line or configuration variant specifications
+        into structured variant objects with deduplication and attribute merging.
+
+        Args:
+            variant_args: List of variant specification strings from --variant args or ini config.
+                         Format: "attr1:attr2:variant,attr3:variant2". Can be None or empty.
+
+        Returns:
+            List of VariantPluginBase objects, one per unique variant name. Duplicate variants
+            have their attributes merged.
+
+        Examples:
+            >>> # Simple variants
+            >>> objs = VariantPluginBase.parse_variants(["v1,v2"])
+            >>> [(obj.attributes, obj.variant) for obj in objs]
+            [([], 'v1'), ([], 'v2')]
+
+            >>> # With attributes
+            >>> objs = VariantPluginBase.parse_variants(["prod:web:v1,mobile:v2"])
+            >>> [(obj.attributes, obj.variant) for obj in objs]
+            [(['prod', 'web'], 'v1'), (['mobile'], 'v2')]
+
+            >>> # Attribute inheritance and merging
+            >>> objs = VariantPluginBase.parse_variants(["prod:v1,v2", "test:v1"])
+            >>> [(obj.attributes, obj.variant) for obj in objs]
+            [(['prod', 'test'], 'v1'), (['prod'], 'v2')]
+
+        Notes:
+            - Uses colon (:) for attributes, comma (,) for variants
+            - Supports escaping with backslash (\\: and \\,)
+            - Attributes inherit within same argument, reset across arguments
+            - Delegates to parse_variants_from_list() for object creation
         """
         log.debug("==> VariantPluginBase.parse_variants variant_args=%s",
                   variant_args)
-        ret = _parse_variants(variant_args)
+        attr_lists = _parse_variant_args_to_lists(variant_args)
+        ret = cls.parse_variants_from_list(attr_lists)
         log.debug("<== VariantPluginBase.parse_variants ret=%s", ret)
         return ret
 
     @classmethod
-    def from_lists(cls, attr_lists: List[List[str]]):
+    def parse_variants_from_list(cls, attr_lists: List[List[str]]) -> (
+            List)["VariantPluginBase"]:
         """
-        Create a list of VariantPluginBase objects from a list of attribute lists.
-        If a variant name appears more than once, merge all attributes for that variant.
-        Each list must have at least one item (the variant is the last item).
+        Create VariantPluginBase objects from pre-parsed attribute lists with deduplication.
+
+        Core method that handles variant object creation and attribute merging. Takes attribute
+        lists (last element = variant name) and creates objects, deduplicating by variant name.
+
+        Args:
+            attr_lists: List of attribute lists in format [attr1, attr2, ..., variant_name].
+                       Last element is variant name, preceding elements are attributes.
+                       Empty lists are ignored.
+
+        Returns:
+            List of VariantPluginBase objects, one per unique variant name. Duplicate variants
+            have their attributes merged (set union).
+
+        Examples:
+            >>> # Different variants
+            >>> attr_lists = [['prod', 'web', 'v1'], ['test', 'v2']]
+            >>> objs = VariantPluginBase.parse_variants_from_list(attr_lists)
+            >>> [(obj.attributes, obj.variant) for obj in objs]
+            [(['prod', 'web'], 'v1'), (['test'], 'v2')]
+
+            >>> # Deduplication - same variant name
+            >>> attr_lists = [['prod', 'v1'], ['test', 'v1']]
+            >>> objs = VariantPluginBase.parse_variants_from_list(attr_lists)
+            >>> [(obj.attributes, obj.variant) for obj in objs]
+            [(['prod', 'test'], 'v1')]  # Attributes merged
+
+            >>> # No attributes
+            >>> attr_lists = [['v1'], ['v2']]
+            >>> objs = VariantPluginBase.parse_variants_from_list(attr_lists)
+            >>> [(obj.attributes, obj.variant) for obj in objs]
+            [([], 'v1'), ([], 'v2')]
+
+        Notes:
+            - Used internally by parse_variants() after string parsing
+            - Attributes are sorted for consistent ordering
+            - Variant names are case-sensitive
+            - Empty attr_lists are ignored
         """
-        log.debug("==> VariantPluginBase.from_lists attr_lists=%s", attr_lists)
+        log.debug(
+            "==> VariantPluginBase.parse_variants_from_list attr_lists=%s",
+            attr_lists)
         variant_map = {}
         for attrs in attr_lists:
             if not attrs:
@@ -160,8 +259,9 @@ class VariantPluginBase:
                 variant_map[variant].update(attributes)
             else:
                 variant_map[variant] = set(attributes)
-        ret = [cls(attributes=list(attributes), variant=variant) for variant, attributes in variant_map.items()]
-        log.debug("<== VariantPluginBase.from_lists ret=%s", ret)
+        ret = [cls(variant=variant, attributes=sorted(attributes)) for
+               variant, attributes in variant_map.items()]
+        log.debug("<== VariantPluginBase.parse_variants_from_list ret=%s", ret)
         return ret
 
     @staticmethod
@@ -179,28 +279,37 @@ class VariantPluginBase:
         return ret
 
     @staticmethod
-    def get_variants(variant_objs: list, attribute=None) -> list:
+    def get_variants(variant_objs: list, attributes=None) -> list:
         """
-        Return a sorted list of variants for a given attribute (any attribute), or for None if no attributes.
+        Return a list of VariantPluginBase objects matching the specified attributes.
+
         :param variant_objs: List of VariantPluginBase objects.
-        :param attribute: Attribute to filter by, or None for variants with no attributes.
-        :return: Sorted list of variant names.
+        :param attributes: Single attribute (string), list of attributes, or None for variants with no attributes.
+        :return: List of VariantPluginBase objects.
         """
         log.debug(
-            "==> VariantPluginBase.get_variants variant_objs=%s, attribute=%s",
-            variant_objs, attribute)
-        variants = []
-        for obj in variant_objs:
-            if attribute is None:
-                if not obj.attributes:
-                    variants.append(obj.variant)
-            else:
-                if attribute in obj.attributes:
-                    variants.append(obj.variant)
-        ret = sorted(variants)
-        log.debug("<== VariantPluginBase.get_variants ret=%s", ret)
-        return ret
+            "==> VariantPluginBase.get_variants variant_objs=%s, attributes=%s",
+            variant_objs, attributes)
 
+        # Normalize attributes to a list for consistent processing
+        if attributes is None:
+            attr_list = None
+        elif isinstance(attributes, str):
+            attr_list = [attributes]
+        else:
+            attr_list = attributes
+
+        # Filter variant objects
+        if attr_list is None or not attr_list:
+            filtered_variants = [obj for obj in variant_objs if not obj.attributes]
+        else:
+            filtered_variants = [obj for obj in variant_objs if
+                               any(attr in obj.attributes for attr in attr_list)]
+
+        ret = sorted(filtered_variants, key=lambda x: x.variant)
+        log.debug("<== VariantPluginBase.get_variants ret=%s",
+                  [(obj.attributes, obj.variant) for obj in ret])
+        return ret
 
 def get_all_variant_objs(config):
     """
@@ -212,8 +321,7 @@ def get_all_variant_objs(config):
     if not variant_args:
         ini_variants = config.getini('VARIANTS')
         variant_args = [ini_variants] if ini_variants else []
-    attr_lists = _parse_variants(variant_args)
-    ret = VariantPluginBase.from_lists(attr_lists)
+    ret = VariantPluginBase.parse_variants(variant_args)
     log.debug("<== get_all_variant_objs ret=%s", ret)
     return ret
 
@@ -246,18 +354,22 @@ def variant(request):
 @pytest.fixture
 def variant_setup(request):
     """
-    Fixture providing the variant-setup string (for setup/discovery).
+    Fixture providing the variant-setup as a list of VariantPluginBase objects (for setup/discovery).
     """
     log.debug("==> variant_setup request=%s", request)
     config = request.config
     setup_str = config.getoption('variant_setup') or config.getini(
         'VARIANT_SETUP')
-    log.debug("<== variant_setup ret=%s", setup_str)
-    return setup_str
+    if not setup_str:
+        log.debug("<== variant_setup ret=[] (no setup_str)")
+        return []
+    ret = VariantPluginBase.parse_variants([setup_str])
+    log.debug("<== variant_setup ret=%s", ret)
+    return ret
 
 
 @pytest.fixture
-def variant_attributes(request):
+def all_variant_attributes(request):
     """
     Fixture returning all unique attributes from all variants.
     """
@@ -269,42 +381,34 @@ def variant_attributes(request):
 
 
 @pytest.fixture
-def variant_variants(request):
+def variant_filter(request):
     """
-    Fixture returning a function to get all variants for a given attribute.
+    Returns a function with methods for different filtering needs for variants:
+    - variant_filter.by_attribute(attr) -> variant objects with single attribute
+    - variant_filter.by_attributes(attrs) -> variant objects with any of the attributes
+                                             (replaces variants_with_attributes)
+    - variant_filter.all_names() -> all variant names
+    - variant_filter.all_objects() -> all variant objects
     """
-    log.debug("==> variant_variants request=%s", request)
+    log.debug("==> variant_filter request=%s", request)
     variant_objs = get_all_variant_objs(request.config)
 
-    def _get(attribute=None):
-        log.debug("==> variant_variants._get attribute=%s", attribute)
-        ret = VariantPluginBase.get_variants(variant_objs, attribute)
-        log.debug("<== variant_variants._get ret=%s", ret)
-        return ret
+    class VariantFilter:
 
-    log.debug("<== variant_variants ret=_get")
-    return _get
+        def by_attribute(self, attribute=None):
+            """Get variant objects for single attribute - returns full objects instead of just names"""
+            return VariantPluginBase.get_variants(variant_objs, attribute)
 
+        def by_attributes(self, attributes=None):
+            """Get variant objects with any of the attributes (replaces variants_with_attributes)"""
+            return VariantPluginBase.get_variants(variant_objs, attributes)
 
-@pytest.fixture
-def variants_with_attributes(request):
-    """
-    Fixture returning a function to get all variants that have any of the specified attributes.
-    Usage: variants_with_attributes([attr1, attr2, ...])
-    Returns a list of VariantPluginBase objects matching any attribute.
-    """
-    log.debug("==> variants_with_attributes request=%s", request)
-    variant_objs = get_all_variant_objs(request.config)
+        def all_variants(self):
+            """Get all variant objects"""
+            return variant_objs
 
-    def _get(attributes: list):
-        log.debug("==> variants_with_attributes._get attributes=%s", attributes)
-        # Return variants that have ANY of the specified attributes
-        ret = [obj for obj in variant_objs if any(attr in obj.attributes for attr in attributes)]
-        log.debug("<== variants_with_attributes._get ret=%s", [(obj.attributes, obj.variant) for obj in ret])
-        return ret
-
-    log.debug("<== variants_with_attributes ret=_get")
-    return _get
+    log.debug("<== variant_filter ret=VariantFilter")
+    return VariantFilter()
 
 
 def pytest_report_header(config):

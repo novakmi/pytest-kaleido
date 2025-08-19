@@ -45,12 +45,12 @@ def test_variant_parametrize_with_attributes(pytester):
 def test_variant_attributes_and_variants_fixtures(pytester):
     pytester.makepyfile(
         """
-        def test_attributes_and_variants(variant_attributes, variant_variants):
+        def test_attributes_and_variants(all_variant_attributes, variant_filter):
             # Should collect all unique attributes (not just first)
-            assert set(variant_attributes) == {'router', 'switch', 'special'}
-            assert set(variant_variants('router')) == {'1.0', '1.1'}
-            assert set(variant_variants('switch')) == {'2.0'}
-            assert set(variant_variants('special')) == {'1.0', '1.1', '1,2', '1:0'}
+            assert set(all_variant_attributes) == {'router', 'switch', 'special'}
+            assert set(obj.variant for obj in variant_filter.by_attribute('router')) == {'1.0', '1.1'}
+            assert set(obj.variant for obj in variant_filter.by_attribute('switch')) == {'2.0'}
+            assert set(obj.variant for obj in variant_filter.by_attribute('special')) == {'1.0', '1.1', '1,2', '1:0'}
         """
     )
     result = pytester.runpytest(
@@ -66,8 +66,8 @@ def test_variant_attributes_and_variants_fixtures(pytester):
 def test_variant_variants_none_attributes(pytester):
     pytester.makepyfile(
         """
-        def test_variants_none(variant_variants):
-            assert set(variant_variants(None)) == {'foo', 'bar'}
+        def test_variants_none(variant_filter):
+            assert set(obj.variant for obj in variant_filter.by_attribute(None)) == {'foo', 'bar'}
         """
     )
     result = pytester.runpytest('--variant=foo,bar', '-v')
@@ -145,11 +145,11 @@ def test_variant_setup_escape_characters(pytester):
     pytester.makepyfile(
         """
         import pytest
-        from pytest_variant.plugin import _parse_variants
+        from pytest_variant.plugin import _parse_variant_args_to_lists
 
         def test_variant_setup(request):
             setup_str = request.config.getoption('variant_setup')
-            variants = _parse_variants([setup_str])
+            variants = _parse_variant_args_to_lists([setup_str])
             # Should parse --variant-setup string (see below)
             assert ['win', 'C:\\Program Files\\App'] in variants
             assert ['linux', '/opt/app'] in variants
@@ -170,14 +170,14 @@ def test_variant_setup_escape_characters(pytester):
 def test_variants_with_attributes_fixture(pytester):
     pytester.makepyfile(
         """
-        def test_variants_with_attributes(variants_with_attributes):
+        def test_variants_with_attributes(variant_filter):
             # Should return all variants with 'router' or 'special' attributes
-            objs = variants_with_attributes(['router', 'special'])
+            objs = variant_filter.by_attributes(['router', 'special'])
             for obj in objs:
                 assert 'router' in obj.attributes or 'special' in obj.attributes
             assert set(obj.variant for obj in objs) == {'1.0', '1.1', '1,2', '1:0'}
             # Should return all variants with 'switch' attribute
-            objs2 = variants_with_attributes(['switch'])
+            objs2 = variant_filter.by_attributes(['switch'])
             for obj in objs2:
                 assert 'switch' in obj.attributes
             assert set(obj.variant for obj in objs2) == {'2.0'}
