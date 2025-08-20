@@ -160,6 +160,22 @@ Examples of setup string include a directory path, server location, or other res
 Tags: design;discovery;setup
 Child: IR-PV-009
 
+DR-PV-009::
+Variant setup fixture structure
++
+The plugin SHALL provide a `variant_setup` fixture that returns a list of `VariantPluginBase` objects parsed from the `--variant-setup` option, using the same structure and parsing logic as regular variants.
++
+Tags: design;fixture;setup
+Child: IR-PV-009
+
+DR-PV-010::
+Variant access fixtures
++
+The plugin SHALL provide fixtures for accessing variant data:
++
+Tags: design;fixture;access
+Child: IR-PV-011
+
 == Implementation Requirements (IR)
 
 IR-PV-001::
@@ -237,9 +253,20 @@ Child: None
 IR-PV-010::
 Abstract base for product plugins
 +
-The plugin SHALL be designed so it can serve as an abstract base for specific product plugins, enabling reuse and extension of variant-oriented functionality in product-specific pytest plugins.
+The plugin SHALL be designed so it can serve as an base for specific product plugins, enabling reuse and extension of variant-oriented functionality in product-specific pytest plugins.
 +
-Tags: impl;abstract;reuse
+Tags: impl;reuse
+Child: None
+
+IR-PV-011::
+Implement variant access fixtures
++
+The plugin SHALL implement all variant access fixtures with proper typing and error handling.
++
+- `variant`: Current variant object for parametrized tests
+- `variant_filter`: Filtering functions for variant data selection
+
+Tags: impl;fixture;api
 Child: None
 
 .Examples of command-line usage
@@ -248,7 +275,7 @@ pytest --variant=pro,enterprise
 pytest --variant=1.0,1.1,2.0,2.1,3.0
 pytest --variant-setup="/opt/products/myproduct/installs/"  # path to product installation directory
 # Example: two products, each with different versions
-pytest --variant=router:1.0,1.1,special\,edition;switch:2.0,2.1,3.0
+pytest --variant=router:1.0,1.1,special\,edition --variant=switch:2.0,2.1,3.0
 # Example: variant string with multiple attributes
 pytest --variant=prod1:region1:router,prod2:region2:switch
 # Escaping ':' and ',' in variant names and attributes

@@ -75,8 +75,8 @@ def _split_escaped(s, sep):
     return parts
 
 
-def _parse_variant_args_to_lists(variant_args: Optional[List[str]]) -> (
-        List)[List[str]]:
+# Fix invalid type hint
+def _parse_variant_args_to_lists(variant_args: Optional[List[str]]) -> List[List[str]]:
     """
     Convert variant argument strings into structured attribute lists.
 
@@ -159,8 +159,7 @@ class VariantPluginBase:
         return self.attributes
 
     @classmethod
-    def parse_variants(cls, variant_args: Optional[List[str]]) -> (
-            List)["VariantPluginBase"]:
+    def parse_variants(cls, variant_args: Optional[List[str]]) -> List["VariantPluginBase"]:
         """
         Parse variant argument strings and return a list of VariantPluginBase objects.
 
@@ -205,8 +204,7 @@ class VariantPluginBase:
         return ret
 
     @classmethod
-    def parse_variants_from_list(cls, attr_lists: List[List[str]]) -> (
-            List)["VariantPluginBase"]:
+    def parse_variants_from_list(cls, attr_lists: List[List[str]]) -> List["VariantPluginBase"]:
         """
         Create VariantPluginBase objects from pre-parsed attribute lists with deduplication.
 
@@ -303,13 +301,14 @@ class VariantPluginBase:
         if attr_list is None or not attr_list:
             filtered_variants = [obj for obj in variant_objs if not obj.attributes]
         else:
-            filtered_variants = [obj for obj in variant_objs if
-                               any(attr in obj.attributes for attr in attr_list)]
+            filtered_variants = [obj for obj in variant_objs
+                                 if any(attr in obj.attributes for attr in attr_list)]
 
         ret = sorted(filtered_variants, key=lambda x: x.variant)
         log.debug("<== VariantPluginBase.get_variants ret=%s",
                   [(obj.attributes, obj.variant) for obj in ret])
         return ret
+
 
 def get_all_variant_objs(config):
     """
@@ -369,26 +368,13 @@ def variant_setup(request):
 
 
 @pytest.fixture
-def all_variant_attributes(request):
-    """
-    Fixture returning all unique attributes from all variants.
-    """
-    log.debug("==> variant_attributes request=%s", request)
-    variant_objs = get_all_variant_objs(request.config)
-    ret = VariantPluginBase.get_attributes(variant_objs)
-    log.debug("<== variant_attributes ret=%s", ret)
-    return ret
-
-
-@pytest.fixture
 def variant_filter(request):
     """
     Returns a function with methods for different filtering needs for variants:
     - variant_filter.by_attribute(attr) -> variant objects with single attribute
     - variant_filter.by_attributes(attrs) -> variant objects with any of the attributes
-                                             (replaces variants_with_attributes)
-    - variant_filter.all_names() -> all variant names
-    - variant_filter.all_objects() -> all variant objects
+    - variant_filter.all_variants() -> all variant objects
+    - variant_filter.all_variant_attributes() -> all unique attributes from all variants
     """
     log.debug("==> variant_filter request=%s", request)
     variant_objs = get_all_variant_objs(request.config)
@@ -406,6 +392,10 @@ def variant_filter(request):
         def all_variants(self):
             """Get all variant objects"""
             return variant_objs
+
+        def all_variant_attributes(self):
+            """Get all unique attributes from all variants"""
+            return VariantPluginBase.get_attributes(variant_objs)
 
     log.debug("<== variant_filter ret=VariantFilter")
     return VariantFilter()

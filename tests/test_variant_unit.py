@@ -248,7 +248,7 @@ def test_get_variants_with_attributes_multiple():
         VariantPluginBase('foo', ['router']),
         VariantPluginBase('bare', []),
     ]
-    filtered = VariantPluginBase.get_variants(objs,attributes=['router', 'switch'])
+    filtered = VariantPluginBase.get_variants(objs, attributes=['router', 'switch'])
     assert set(obj.variant for obj in filtered) == {'1.0', '1.1', '2.0', 'foo'}
 
 

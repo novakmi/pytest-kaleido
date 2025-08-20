@@ -45,9 +45,9 @@ def test_variant_parametrize_with_attributes(pytester):
 def test_variant_attributes_and_variants_fixtures(pytester):
     pytester.makepyfile(
         """
-        def test_attributes_and_variants(all_variant_attributes, variant_filter):
+        def test_attributes_and_variants(variant_filter):
             # Should collect all unique attributes (not just first)
-            assert set(all_variant_attributes) == {'router', 'switch', 'special'}
+            assert set(variant_filter.all_variant_attributes()) == {'router', 'switch', 'special'}
             assert set(obj.variant for obj in variant_filter.by_attribute('router')) == {'1.0', '1.1'}
             assert set(obj.variant for obj in variant_filter.by_attribute('switch')) == {'2.0'}
             assert set(obj.variant for obj in variant_filter.by_attribute('special')) == {'1.0', '1.1', '1,2', '1:0'}
@@ -189,5 +189,27 @@ def test_variants_with_attributes_fixture(pytester):
         '-vv')
     result.stdout.fnmatch_lines([
         '*::test_variants_with_attributes PASSED*',
+    ])
+    assert result.ret == 0
+
+
+def test_variant_setup_fixture(pytester):
+    pytester.makepyfile(
+        """
+        def test_setup(variant_setup):
+            # variant_setup fixture should return a list of VariantPluginBase objects
+            assert isinstance(variant_setup, list)
+            assert all(hasattr(obj, 'variant') and hasattr(obj, 'attributes') for obj in variant_setup)
+            found = {(tuple(obj.attributes), obj.variant) for obj in variant_setup}
+            expected = {
+                (('router',), 'setupA'),
+                (('switch',), 'setupB'),
+            }
+            assert found == expected
+        """
+    )
+    result = pytester.runpytest('--variant-setup=router:setupA,switch:setupB', '-v')
+    result.stdout.fnmatch_lines([
+        '*::test_setup PASSED*',
     ])
     assert result.ret == 0
