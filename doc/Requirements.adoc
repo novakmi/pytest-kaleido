@@ -16,7 +16,7 @@ Child: DR-PV-001, DR-PV-002, IR-PV-010
 UR-PV-002::
 Multiple product support
 +
-The plugin SHALL allow specifying one or more products to be tested in a single test session, inferred from the `--variant` option.
+The plugin SHALL allow specifying one or more variant to be tested in a single test session.
 +
 Tags: system;product;variant
 Child: DR-PV-001, DR-PV-002, DR-PV-007, DR-PV-008, IR-PV-010
@@ -40,7 +40,7 @@ Child: DR-PV-002, DR-PV-004, DR-PV-005, DR-PV-006
 UR-PV-005::
 Variant selection via CLI
 +
-The plugin SHOULD allow selection of specific variants or products via the `--variant` command-line option or pytest markers.
+The plugin SHOULD allow selection of specific variants via the `--variant` command-line option or pytest configuration.
 +
 Tags: system;cli;selection
 Child: DR-PV-003, DR-PV-007
@@ -74,7 +74,7 @@ Child: IR-PV-005, IR-PV-006
 DR-PV-001::
 Fixture/hook for variant injection
 +
-The plugin SHALL implement a pytest fixture or hook to inject variant/product parameters into tests.
+The plugin SHALL implement a pytest fixture or hook to inject variant parameters into tests.
 +
 Tags: design;fixture;hook
 Child: IR-PV-001, IR-PV-002
@@ -82,7 +82,7 @@ Child: IR-PV-001, IR-PV-002
 DR-PV-002::
 Variant definition in config/code
 +
-The plugin SHALL support variant definitions via pytest configuration files (e.g., `pytest.ini`, `pyproject.toml`) and/or Python code (e.g., fixtures, decorators).
+The plugin SHALL support variant definitions via pytest configuration files (e.g., `pytest.ini`, `pyproject.toml`) and/or via command line arguments (e.g., `--variant`).
 +
 Tags: design;configuration;code
 Child: IR-PV-002
@@ -136,7 +136,7 @@ Child: IR-PV-006
 DR-PV-006::
 Validation and error messages
 +
-The plugin SHOULD validate variant/product definitions and provide clear error messages for misconfiguration.
+The plugin SHOULD validate variant definitions and provide clear error messages for misconfiguration.
 +
 Tags: design;validation
 Child: IR-PV-006
@@ -144,7 +144,7 @@ Child: IR-PV-006
 DR-PV-007::
 Direct CLI variant definition
 +
-The plugin SHALL provide a mechanism to define variants/products directly via the `--variant` command-line option, overriding configuration or defaults if specified.
+The plugin SHALL provide a mechanism to define variants directly via the `--variant` command-line option, overriding configuration or defaults if specified.
 +
 Tags: design;cli;override
 Child: IR-PV-008
@@ -165,7 +165,7 @@ Child: IR-PV-009
 IR-PV-001::
 Parametrize tests for variants/products
 +
-The plugin SHALL use pytest's parametrize or metafunc hooks to generate test cases for each variant/product combination.
+The plugin SHALL use pytest's parametrize or metafunc hooks to generate test cases for each variant combination.
 +
 Tags: impl;parametrize
 Child: None
@@ -173,7 +173,7 @@ Child: None
 IR-PV-002::
 Parse variant definitions at collection
 +
-The plugin SHALL parse variant/product definitions from configuration files and/or test code at collection time.
+The plugin SHALL parse variant definitions from configuration files and/or test code at collection time.
 +
 Tags: impl;parse;collection
 Child: None
@@ -181,7 +181,7 @@ Child: None
 IR-PV-003::
 Expose variant context to tests
 +
-The plugin SHOULD add custom markers or test attributes to expose variant/product context to tests and reporting tools.
+The plugin SHOULD add custom markers or test attributes to expose variant context to tests and reporting tools.
 +
 Tags: impl;marker;context
 Child: None
@@ -221,7 +221,7 @@ Child: None
 IR-PV-008::
 Parse/apply CLI variant definitions
 +
-The plugin SHALL parse and apply variant/product definitions provided via the `--variant` command-line option, taking precedence over configuration file or code-based definitions.
+The plugin SHALL parse and apply variant definitions provided via the `--variant` command-line option, taking precedence over configuration file or code-based definitions.
 +
 Tags: impl;cli;parse
 Child: None
