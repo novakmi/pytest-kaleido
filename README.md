@@ -1,4 +1,4 @@
-## pytest-variant
+## pytest-kaleido
 
 Pytest variant plugin.
 

@@ -5,10 +5,10 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pytest-variant"
+name = "pytest-kaleido"
 description = "A plugin that abstracts the testing of different variants or versions."
-version = "0.1.0"
-readme = "README.rst"
+version = "0.2.0"
+readme = "README.md"
 requires-python = ">=3.8"
 authors = [
     { name = "Michal Novak", email = "it.novakmi@gmail.com" },
@@ -38,6 +38,6 @@ dependencies = [
     "pytest>=6.2.0",
 ]
 [project.urls]
-Repository = "https://github.com/novakmi/pytest-variant"
+Repository = "https://github.com/novakmi/pytest-kaleido"
 [project.entry-points.pytest11]
-variant = "pytest_variant.plugin"
+variant = "pytest_kaleido.plugin"

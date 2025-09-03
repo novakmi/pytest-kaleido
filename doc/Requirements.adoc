@@ -1,4 +1,4 @@
-= Requirements for pytest-variant
+= Requirements for pytest-kaleido
 :toc:
 :sectnums:
 :experimental:
@@ -40,7 +40,7 @@ Child: DR-PV-002, DR-PV-004, DR-PV-005, DR-PV-006
 UR-PV-005::
 Variant selection via CLI
 +
-The plugin SHOULD allow selection of specific variants via the `--variant` command-line option or pytest configuration.
+The plugin SHOULD allow selection of specific variants via the `--kaleido-variant` command-line option or pytest configuration.
 +
 Tags: system;cli;selection
 Child: DR-PV-003, DR-PV-007
@@ -82,7 +82,7 @@ Child: IR-PV-001, IR-PV-002
 DR-PV-002::
 Variant definition in config/code
 +
-The plugin SHALL support variant definitions via pytest configuration files (e.g., `pytest.ini`, `pyproject.toml`) and/or via command line arguments (e.g., `--variant`).
+The plugin SHALL support variant definitions via pytest configuration files (e.g., `pytest.ini`, `pyproject.toml`) and/or via command line arguments (e.g., `--kaleido-variant`).
 +
 Tags: design;configuration;code
 Child: IR-PV-002
@@ -90,28 +90,28 @@ Child: IR-PV-002
 DR-PV-003::
 CLI option for variant selection
 +
-General format for `--variant`:
-  `--variant=[<attribute1>:<attribute2>:...:]<variant>[,[<attribute1>:<attribute2>:...:]<variant>...]`
-Attributes in `--variant` are optional. If a `<variant>` is not preceded by any `<attribute>`, it automatically inherits attributes from the previous `<variant>` in the same argument. The first variant in a `--variant` argument may also omit attributes, in which case it is treated as having no attributes. A new `--variant` argument resets the attribute context.
+General format for `--kaleido-variant`:
+  `--kaleido-variant=[<attribute1>:<attribute2>:...:]<variant>[,[<attribute1>:<attribute2>:...:]<variant>...]`
+Attributes in `--kaleido-variant` are optional. If a `<variant>` is not preceded by any `<attribute>`, it automatically inherits attributes from the previous `<variant>` in the same argument. The first variant in a `--kaleido-variant` argument may also omit attributes, in which case it is treated as having no attributes. A new `--kaleido-variant` argument resets the attribute context.
 Attributes and variant are separated by colons `:`. Multiple variants in one argument are separated by commas `,`.
 Both `:` and `,` can be escaped with a backslash `\` if they are part of an attribute or variant name.
 +
-A variant value (name) can be specified more than once, with the same or different attributes (even across multiple `--variant` arguments). In this case, all attributes for that variant will be merged into a single variant value with a combined set of attributes.
+A variant value (name) can be specified more than once, with the same or different attributes (even across multiple `--kaleido-variant` arguments). In this case, all attributes for that variant will be merged into a single variant value with a combined set of attributes.
 +
-The plugin SHOULD provide a command-line option (e.g., `--variant`) to select specific variants/products for a test run.
+The plugin SHOULD provide a command-line option (e.g., `--kaleido-variant`) to select specific variants/products for a test run.
 This option can be repeated, e.g.:
-  `pytest --variant=router --variant=switch`
+  `pytest --kaleido-variant=router --kaleido-variant=switch`
 Multiple variants can also be specified in a single option, separated by commas:
-  `pytest --variant=router,switch`
+  `pytest --kaleido-variant=router,switch`
 A variant string may begin with one or more attributes, separated by colons `:`, e.g.:
-  `pytest --variant=prod1:region1:router,prod2:region2:switch`
+  `pytest --kaleido-variant=prod1:region1:router,prod2:region2:switch`
 If the `:` character is part of the variant name or attribute, it can be escaped with a backslash:
-  `pytest --variant=prod1:region1:router\:special`
+  `pytest --kaleido-variant=prod1:region1:router\:special`
 If the `,` character is part of the variant name, it can be escaped with a backslash:
-  `pytest --variant=router\,special`
+  `pytest --kaleido-variant=router\,special`
 +
 Examples:
-  `pytest --variant=a:1.0,1.1 --variant=b:1.0,1.1`
+  `pytest --kaleido-variant=a:1.0,1.1 --kaleido-variant=b:1.0,1.1`
   # creates variants: 1.0 (attributes: a, b), 1.1 (attributes: a, b) (if a variant value is repeated, attributes are merged; each variant will have all attributes)
 +
 Tags: design;cli
@@ -144,7 +144,7 @@ Child: IR-PV-006
 DR-PV-007::
 Direct CLI variant definition
 +
-The plugin SHALL provide a mechanism to define variants directly via the `--variant` command-line option, overriding configuration or defaults if specified.
+The plugin SHALL provide a mechanism to define variants directly via the `--kaleido-variant` command-line option, overriding configuration or defaults if specified.
 +
 Tags: design;cli;override
 Child: IR-PV-008
@@ -152,9 +152,9 @@ Child: IR-PV-008
 DR-PV-008::
 Variant discovery and setup
 +
-The plugin SHALL provide a command-line option (`--variant-setup`) to specify a general setup string for variant discovery and configuration. The syntax is the same as `--variant` (attributes and variant separated by colons `:`, multiple entries separated by commas `,`; both `:` and `,` can be escaped with a backslash `\`).
-Attributes in `--variant-setup` are optional. If a `<variant>` is not preceded by any `<attribute>`, it automatically inherits attributes from the previous `<variant>` in the same argument.
-Unlike `--variant`, `--variant-setup` cannot be repeated; only one argument is accepted.
+The plugin SHALL provide a command-line option (`--kaleido-variant-setup`) to specify a general setup string for variant discovery and configuration. The syntax is the same as `--kaleido-variant` (attributes and variant separated by colons `:`, multiple entries separated by commas `,`; both `:` and `,` can be escaped with a backslash `\`).
+Attributes in `--kaleido-variant-setup` are optional. If a `<variant>` is not preceded by any `<attribute>`, it automatically inherits attributes from the previous `<variant>` in the same argument.
+Unlike `--kaleido-variant`, `--kaleido-variant-setup` cannot be repeated; only one argument is accepted.
 Examples of setup string include a directory path, server location, or other resource identifier.
 +
 Tags: design;discovery;setup
@@ -163,7 +163,7 @@ Child: IR-PV-009
 DR-PV-009::
 Variant setup fixture structure
 +
-The plugin SHALL provide a `variant_setup` fixture that returns a list of `VariantPluginBase` objects parsed from the `--variant-setup` option, using the same structure and parsing logic as regular variants.
+The plugin SHALL provide a `variant_setup` fixture that returns a list of `VariantPluginBase` objects parsed from the `--kaleido-variant-setup` option, using the same structure and parsing logic as regular variants.
 +
 Tags: design;fixture;setup
 Child: IR-PV-009
@@ -237,15 +237,15 @@ Child: None
 IR-PV-008::
 Parse/apply CLI variant definitions
 +
-The plugin SHALL parse and apply variant definitions provided via the `--variant` command-line option, taking precedence over configuration file or code-based definitions.
+The plugin SHALL parse and apply variant definitions provided via the `--kaleido-variant` command-line option, taking precedence over configuration file or code-based definitions.
 +
 Tags: impl;cli;parse
 Child: None
 
 IR-PV-009::
-Parse/apply --variant-setup for discovery
+Parse/apply --kaleido-variant-setup for discovery
 +
-The plugin SHALL parse and apply the `--variant-setup` option as a path to a product installation directory to influence or override variant/product discovery and parameterization logic.
+The plugin SHALL parse and apply the `--kaleido-variant-setup` option as a path to a product installation directory to influence or override variant/product discovery and parameterization logic.
 +
 Tags: impl;discovery;directory
 Child: None
@@ -271,19 +271,19 @@ Child: None
 
 .Examples of command-line usage
 ----
-pytest --variant=pro,enterprise
-pytest --variant=1.0,1.1,2.0,2.1,3.0
-pytest --variant-setup="/opt/products/myproduct/installs/"  # path to product installation directory
+pytest --kaleido-variant=pro,enterprise
+pytest --kaleido-variant=1.0,1.1,2.0,2.1,3.0
+pytest --kaleido-variant-setup="/opt/products/myproduct/installs/"  # path to product installation directory
 # Example: two products, each with different versions
-pytest --variant=router:1.0,1.1,special\,edition --variant=switch:2.0,2.1,3.0
+pytest --kaleido-variant=router:1.0,1.1,special\,edition --kaleido-variant=switch:2.0,2.1,3.0
 # Example: variant string with multiple attributes
-pytest --variant=prod1:region1:router,prod2:region2:switch
+pytest --kaleido-variant=prod1:region1:router,prod2:region2:switch
 # Escaping ':' and ',' in variant names and attributes
-pytest --variant=prod1:region1:router\:special,prod2:region2:switch\,special
-# Multiple --variant arguments
-pytest --variant=router:1.0 --variant=router:1.1 --variant=switch:2.0 --variant=switch:2.1
+pytest --kaleido-variant=prod1:region1:router\:special,prod2:region2:switch\,special
+# Multiple --kaleido-variant arguments
+pytest --kaleido-variant=router:1.0 --kaleido-variant=router:1.1 --kaleido-variant=switch:2.0 --kaleido-variant=switch:2.1
 # Mixing single and multiple variants in one argument
-pytest --variant=router:1.0,1.1 --variant=switch:2.0,2.1,3.0
+pytest --kaleido-variant=router:1.0,1.1 --kaleido-variant=switch:2.0,2.1,3.0
 # Escaping in repeated arguments
-pytest --variant=router\,special --variant=switch\:special
+pytest --kaleido-variant=router\,special --kaleido-variant=switch\:special
 ----

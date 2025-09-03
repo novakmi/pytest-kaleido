@@ -1,4 +1,4 @@
-= pytest-variant
+= pytest-kaleido
 :experimental:
 :icons: font
 :toc: left
@@ -14,13 +14,13 @@ endif::[]
 
 :Author:    Michal Novák
 :email:     it.novakmi@gmail.com
-:URL:       https://github.com/novakmi/pytest-variant
+:URL:       https://github.com/novakmi/pytest-kaleido
 :Date:      2025-07-29
 :Revision:  0.1.0
 
 == Introduction
 
-The `pytest-variant` plugin abstracts and simplifies testing across different variants or versions of your product or system.
+The `pytest-kaleido` plugin abstracts and simplifies testing across different variants or versions of your product or system. Transforms your test suite into a kaleidoscope of coverage, allowing you to run tests across multiple dimensions like version, platform, and feature flags from a single codebase.
 
 https://docs.pytest.org/[Pytest] is a well-known Python test framework with rich features and flexibility.
 
@@ -28,29 +28,29 @@ https://docs.pytest.org/[Pytest] is a well-known Python test framework with rich
 
 === `pip3` installation
 
-You can install the `pytest-variant` plugin with `pip3`.
+You can install the `pytest-kaleido` plugin with `pip3`.
 
 .Install from https://pypi.org/ (not yet available)
 ----
-# pip3 install pytest-variant
+# pip3 install pytest-kaleido
 ----
 
 .Clone repository and install from the directory
 ----
-git clone https://github.com/novakmi/pytest-variant.git
-cd pytest-variant
+git clone https://github.com/novakmi/pytest-kaleido.git
+cd pytest-kaleido
 pip3 install .
 ----
-NOTE: Or `pip3 install pytest-variant/` from the parent directory.
+NOTE: Or `pip3 install pytest-kaleido/` from the parent directory.
 
 .Uninstall plugin
 ----
-pip3 uninstall pytest-variant
+pip3 uninstall pytest-kaleido
 ----
 
 === `PYTHONPATH` installation
 
-Set PYTHONPATH to the `pytest-variant/src` directory (run from the root of the repository):
+Set PYTHONPATH to the `pytest-kaleido/src` directory (run from the root of the repository):
 [source, shell]
 ----
 export PYTHONPATH=./src:$PYTHONPATH
@@ -59,14 +59,14 @@ export PYTHONPATH=./src:$PYTHONPATH
 Add into your `conftest.py`:
 [source, python]
 ----
-pytest_plugins = ["pytest_variant"]
+pytest_plugins = ["pytest_kaleido"]
 ----
 
 or add into `pytest.ini`:
 [source,ini]
 ----
 [pytest]
-addopts = -p pytest_variant
+addopts = -p pytest_kaleido
 ----
 
 === Verify installation
@@ -93,33 +93,33 @@ def test_variant(variant):
 . Run pytest with variants:
 [source, shell]
 ----
-pytest --variant=router:1.0,router:1.1,switch:2.0
+pytest --kaleido-variant=router:1.0,router:1.1,switch:2.0
 ----
 
 == User guide
 
 === Variant syntax
 
-Variants are specified using the `--variant` option. Each variant can have zero or more attributes and a variant name, separated by colons (`:`). Multiple variants can be specified in a single `--variant` argument, separated by commas (`,`). Both `:` and `,` can be escaped with a backslash (`\`) if they are part of an attribute or variant name.
+Variants are specified using the `--kaleido-variant` option. Each variant can have zero or more attributes and a variant name, separated by colons (`:`). Multiple variants can be specified in a single `--kaleido-variant` argument, separated by commas (`,`). Both `:` and `,` can be escaped with a backslash (`\`) if they are part of an attribute or variant name.
 
 .Syntax
 ----
---variant=[<attribute1>:<attribute2>:...:]<variant>[,[<attribute1>:<attribute2>:...:]<variant>...]
+--kaleido-variant=[<attribute1>:<attribute2>:...:]<variant>[,[<attribute1>:<attribute2>:...:]<variant>...]
 ----
 
-You can repeat the `--variant` option to specify more variants. If a variant in a comma-separated list omits attributes, it inherits the attributes from the previous variant in the same argument. The first variant in a `--variant` argument may also omit attributes, in which case it is treated as having no attributes. A new `--variant` argument resets the attribute context.
+You can repeat the `--kaleido-variant` option to specify more variants. If a variant in a comma-separated list omits attributes, it inherits the attributes from the previous variant in the same argument. The first variant in a `--kaleido-variant` argument may also omit attributes, in which case it is treated as having no attributes. A new `--kaleido-variant` argument resets the attribute context.
 
 .Examples
 ----
---variant=router:1.0,1.1,switch:2.0
+--kaleido-variant=router:1.0,1.1,switch:2.0
 // <1> <2> <3>
---variant=1.0,1.1,special:2.0
+--kaleido-variant=1.0,1.1,special:2.0
 // <4> <5> <6>
---variant=router:special:1.0,1.1,1\,2,1\:0,1:0
+--kaleido-variant=router:special:1.0,1.1,1\,2,1\:0,1:0
 // <7> <8> <9> <10> <11>
---variant=a:1.0,1.1 --variant=b:1.0,1.1
+--kaleido-variant=a:1.0,1.1 --kaleido-variant=b:1.0,1.1
 // <12> <13> <14> <15>
---variant=win:C\:\\Program Files\\App,linux:/opt/app,win:C\:\\App,linux:/opt/app\,special
+--kaleido-variant=win:C\:\\Program Files\\App,linux:/opt/app,win:C\:\\App,linux:/opt/app\,special
 // <16> <17> <18> <19>
 ----
 <1> router:1.0      (attributes: router, variant: 1.0)
@@ -144,11 +144,11 @@ You can repeat the `--variant` option to specify more variants. If a variant in 
 
 === Variant setup syntax
 
-The `--variant-setup` option is used to provide a general setup/discovery string (e.g., directory, server location). It uses the same syntax as `--variant`, but cannot be repeated.
+The `--kaleido-variant-setup` option is used to provide a general setup/discovery string (e.g., directory, server location). It uses the same syntax as `--kaleido-variant`, but cannot be repeated.
 
 .Example
 ----
---variant-setup=win:C\:\\Program Files\\App,linux:/opt/app
+--kaleido-variant-setup=win:C\:\\Program Files\\App,linux:/opt/app
 ----
 
 === Source code examples
@@ -206,7 +206,6 @@ pytest -o log_cli=true -o log_cli_level=DEBUG tests/
 
 * Improve code documentation
 * Add more usage examples
-* Publish to pypi.org
 
 == Links
 

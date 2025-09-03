@@ -1,5 +1,5 @@
 """
-pytest-variant plugin: Provides parametrization and fixtures for testing multiple product variants.
+pytest-kaleido plugin: Provides parametrization and fixtures for testing multiple product variants.
 
 This plugin allows you to specify variants (e.g., product versions, configurations) via
 command-line options or ini files.
@@ -25,10 +25,10 @@ def pytest_addoption(parser):
     """
     Add command-line options and ini options for variant and variant-setup.
     """
-    group = parser.getgroup('variant')
+    group = parser.getgroup('kaleido_variant')
     group.addoption(
-        '--variant',
-        action='append',  # allow multiple --variant arguments
+        '--kaleido-variant',
+        action='append',  # allow multiple --kaleido-variant arguments
         dest='variant',
         default=None,
         help='Variant specification(s). Can be repeated.'
@@ -36,18 +36,18 @@ def pytest_addoption(parser):
              ' Colons and commas can be escaped with \\.'
     )
     group.addoption(
-        '--variant-setup',
+        '--kaleido-variant-setup',
         action='store',
         dest='variant_setup',
         default=None,
         help='General setup string for variant discovery (e.g. directory, '
-             'server location). Same syntax as --variant, '
+             'server location). Same syntax as --kaleido-variant, '
              'but cannot be repeated.'
     )
-    parser.addini('VARIANTS',
+    parser.addini('KALEIDO_VARIANTS',
                   'Default variants (comma-separated, '
-                  'same format as --variant)')
-    parser.addini('VARIANT_SETUP', 'Default variant-setup string')
+                  'same format as --kaleido-variant)')
+    parser.addini('KALEIDO_VARIANT_SETUP', 'Default variant-setup string')
 
 
 def _split_escaped(s, sep):
@@ -75,7 +75,6 @@ def _split_escaped(s, sep):
     return parts
 
 
-# Fix invalid type hint
 def _parse_variant_args_to_lists(variant_args: Optional[List[str]]) -> List[List[str]]:
     """
     Convert variant argument strings into structured attribute lists.
@@ -167,7 +166,7 @@ class VariantPluginBase:
         into structured variant objects with deduplication and attribute merging.
 
         Args:
-            variant_args: List of variant specification strings from --variant args or ini config.
+            variant_args: List of variant specification strings from --kaleido-variant args or ini config.
                          Format: "attr1:attr2:variant,attr3:variant2". Can be None or empty.
 
         Returns:
@@ -318,7 +317,7 @@ def get_all_variant_objs(config):
     log.debug("==> get_all_variant_objs config=%s", config)
     variant_args = config.getoption('variant')
     if not variant_args:
-        ini_variants = config.getini('VARIANTS')
+        ini_variants = config.getini('KALEIDO_VARIANTS')
         variant_args = [ini_variants] if ini_variants else []
     ret = VariantPluginBase.parse_variants(variant_args)
     log.debug("<== get_all_variant_objs ret=%s", ret)
@@ -358,7 +357,7 @@ def variant_setup(request):
     log.debug("==> variant_setup request=%s", request)
     config = request.config
     setup_str = config.getoption('variant_setup') or config.getini(
-        'VARIANT_SETUP')
+        'KALEIDO_VARIANT_SETUP')
     if not setup_str:
         log.debug("<== variant_setup ret=[] (no setup_str)")
         return []
@@ -408,10 +407,10 @@ def pytest_report_header(config):
     log.debug("==> pytest_report_header config=%s", config)
     variant_args = config.getoption('variant')
     if not variant_args:
-        variant_args = [config.getini('VARIANTS')] if config.getini(
-            'VARIANTS') else []
+        variant_args = [config.getini('KALEIDO_VARIANTS')] if config.getini(
+            'KALEIDO_VARIANTS') else []
     variant_setup = config.getoption('variant_setup') or config.getini(
-        'VARIANT_SETUP')
+        'KALEIDO_VARIANT_SETUP')
     ret = f"Variants: {variant_args} | Variant-setup: {variant_setup}"
     log.debug("<== pytest_report_header ret=%s", ret)
     return ret

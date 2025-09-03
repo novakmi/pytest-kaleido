@@ -2,10 +2,10 @@ import logging
 import os
 import sys
 try:
-    from pytest_variant.plugin import _parse_variant_args_to_lists, VariantPluginBase
+    from pytest_kaleido.plugin import _parse_variant_args_to_lists, VariantPluginBase
 except ModuleNotFoundError:  # allow running tests without installing the package
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-    from pytest_variant.plugin import _parse_variant_args_to_lists, VariantPluginBase
+    from pytest_kaleido.plugin import _parse_variant_args_to_lists, VariantPluginBase
 
 log = logging.getLogger(__name__)
 

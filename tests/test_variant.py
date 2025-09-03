@@ -11,7 +11,7 @@ def test_variant_parametrize_basic(pytester):
             assert variant.variant in ('foo', 'bar')
         """
     )
-    result = pytester.runpytest('--variant=foo,bar', '-v')
+    result = pytester.runpytest('--kaleido-variant=foo,bar', '-v')
     result.stdout.fnmatch_lines([
         "*::test_variant[foo* PASSED*",
         '*::test_variant[bar* PASSED*',
@@ -32,7 +32,7 @@ def test_variant_parametrize_with_attributes(pytester):
                 assert variant.variant == '2.0'
         """
     )
-    result = pytester.runpytest('--variant=router:1.0,router:1.1,switch:2.0',
+    result = pytester.runpytest('--kaleido-variant=router:1.0,router:1.1,switch:2.0',
                                 '-v')
     result.stdout.fnmatch_lines([
         '*::test_variant[router:1.0* PASSED*',
@@ -54,7 +54,7 @@ def test_variant_attributes_and_variants_fixtures(pytester):
         """
     )
     result = pytester.runpytest(
-        r'--variant=router:1.0,router:1.1,switch:2.0,router:special:1.0,' +
+        r'--kaleido-variant=router:1.0,router:1.1,switch:2.0,router:special:1.0,' +
         r'router:special:1.1,special:1\,2,special:1\:0',
         '-o', 'log_cli_level=DEBUG', '-vv')
     result.stdout.fnmatch_lines([
@@ -70,7 +70,7 @@ def test_variant_variants_none_attributes(pytester):
             assert set(obj.variant for obj in variant_filter.by_attribute(None)) == {'foo', 'bar'}
         """
     )
-    result = pytester.runpytest('--variant=foo,bar', '-v')
+    result = pytester.runpytest('--kaleido-variant=foo,bar', '-v')
     result.stdout.fnmatch_lines([
         '*::test_variants_none PASSED*',
     ])
@@ -88,7 +88,7 @@ def test_variant_inheritance_across_argument(pytester):
                 assert set(variant.attributes) == {'a', 'b'}
         """
     )
-    result = pytester.runpytest('--variant=a:1.0,1.1', '--variant=b:1.0,1.1', '-v')
+    result = pytester.runpytest('--kaleido-variant=a:1.0,1.1', '--kaleido-variant=b:1.0,1.1', '-v')
     result.stdout.fnmatch_lines([
         '*::test_variant[a:b:1.0* PASSED*',
         '*::test_variant[a:b:1.1* PASSED*',
@@ -109,7 +109,7 @@ def test_variant_escape_characters(pytester):
         """
     )
     result = pytester.runpytest(
-        r'--variant=router:special:1.0,1.1,1\,2,1\:0,1:0', '-v')
+        r'--kaleido-variant=router:special:1.0,1.1,1\,2,1\:0,1:0', '-v')
     result.stdout.fnmatch_lines([
         '*::test_variant[router:special:1.0* PASSED*',
         '*::test_variant[router:special:1.1* PASSED*',
@@ -131,7 +131,7 @@ def test_variant_mixed_attributes_and_inheritance(pytester):
                 assert variant.variant in ('2.0', '2.1')
         """
     )
-    result = pytester.runpytest('--variant=router:1.0,1.1,switch:2.0,2.1', '-v')
+    result = pytester.runpytest('--kaleido-variant=router:1.0,1.1,switch:2.0,2.1', '-v')
     result.stdout.fnmatch_lines([
         '*::test_variant[router:1.0* PASSED*',
         '*::test_variant[router:1.1* PASSED*',
@@ -145,12 +145,12 @@ def test_variant_setup_escape_characters(pytester):
     pytester.makepyfile(
         """
         import pytest
-        from pytest_variant.plugin import _parse_variant_args_to_lists
+        from pytest_kaleido.plugin import _parse_variant_args_to_lists
 
         def test_variant_setup(request):
             setup_str = request.config.getoption('variant_setup')
             variants = _parse_variant_args_to_lists([setup_str])
-            # Should parse --variant-setup string (see below)
+            # Should parse --kaleido-variant-setup string (see below)
             assert ['win', 'C:\\Program Files\\App'] in variants
             assert ['linux', '/opt/app'] in variants
             assert ['win', 'C:\\App'] in variants
@@ -159,7 +159,7 @@ def test_variant_setup_escape_characters(pytester):
         """)  # noqa: E261,W605
 
     result = pytester.runpytest(
-        r'--variant-setup=win:C\:\Program Files\App,linux:/opt/app,' +
+        r'--kaleido-variant-setup=win:C\:\Program Files\App,linux:/opt/app,' +
         r'win:C\:\App,linux:/opt/app\,special', '-v')
     result.stdout.fnmatch_lines([
         '*::test_variant_setup PASSED*',
@@ -184,7 +184,7 @@ def test_variants_with_attributes_fixture(pytester):
         """
     )
     result = pytester.runpytest(
-        r'--variant=router:1.0,router:1.1,switch:2.0,router:special:1.0,' +
+        r'--kaleido-variant=router:1.0,router:1.1,switch:2.0,router:special:1.0,' +
         r'router:special:1.1,special:1\,2,special:1\:0',
         '-vv')
     result.stdout.fnmatch_lines([
@@ -208,7 +208,7 @@ def test_variant_setup_fixture(pytester):
             assert found == expected
         """
     )
-    result = pytester.runpytest('--variant-setup=router:setupA,switch:setupB', '-v')
+    result = pytester.runpytest('--kaleido-variant-setup=router:setupA,switch:setupB', '-v')
     result.stdout.fnmatch_lines([
         '*::test_setup PASSED*',
     ])
